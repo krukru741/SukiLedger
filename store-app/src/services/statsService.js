@@ -53,17 +53,34 @@ export const closeShift = async ({ todayStats, setTodayStats, setShiftHistory })
       credit: todayStats.credit,
       profit: todayStats.profit,
       startingCash: todayStats.startingCash,
-      transactions: [],
+      transactions: (todayStats.transactions || []).map(t => ({
+        id: t.id,
+        desc: t.name,
+        total: t.amount,
+        type: t.type
+      })),
     },
     ...prev,
   ]);
 
-  setTodayStats(prev => ({ ...prev, cash: 0, credit: 0, profit: 0 }));
+  setTodayStats(prev => ({ ...prev, cash: 0, credit: 0, profit: 0, transactions: [] }));
 
   // Push to Supabase
-  const { error } = await supabase.from('shift_history').insert([newShift]);
+  const { data: shiftData, error } = await supabase.from('shift_history').insert([newShift]).select();
   if (error) {
     console.error("Error saving shift history:", error);
+    return;
+  }
+  
+  if (shiftData && shiftData.length > 0 && todayStats.transactions && todayStats.transactions.length > 0) {
+    const shiftId = shiftData[0].id;
+    const txns = todayStats.transactions.map(t => ({
+      shift_id: shiftId,
+      description: t.name,
+      total: t.amount,
+      type: t.type
+    }));
+    await supabase.from('shift_transactions').insert(txns);
   }
 };
 
