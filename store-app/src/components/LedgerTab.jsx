@@ -26,7 +26,7 @@ export default function LedgerTab({ sukiList, setSukiList }) {
   });
 
   const sendSMSReminder = (suki) => {
-    const reminderMessage = `Maayong adlaw, ${suki.name}! Reminder lang gikan sa tindahan bahin sa imong kasamtangang utang ledger nga nagkantidad og ₱${suki.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}. Pwede ra nimo ma-settle sa tindahan kung hayahay na ka. Salamat kaayo!`;
+    const reminderMessage = `Maayong adlaw, ${suki.name}! Reminder lang gikan sa tindahan bahin sa imong kasamtangang utang ledger nga nagkantidad og ₱${suki.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}. Pwede ra nimo ma-settle sa tindahan kung hayahay na ka. Salamat kaayo!`;
     if (suki.phone) {
       window.location.href = `sms:${suki.phone}?body=${encodeURIComponent(reminderMessage)}`;
     } else {
@@ -55,9 +55,9 @@ export default function LedgerTab({ sukiList, setSukiList }) {
       if (s.id === selectedSuki.id) {
         const newBalance = s.balance - amt;
         const newHistory = [
-          { 
-            desc: `Payment Received — ₱${amt.toLocaleString('en-US', {minimumFractionDigits: 2})}`, 
-            date: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }), 
+          {
+            desc: `Payment Received — ₱${amt.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+            date: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
             amt: -amt,
             isPayment: true
           },
@@ -86,10 +86,10 @@ export default function LedgerTab({ sukiList, setSukiList }) {
         <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-lg bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col gap-4">
           <div>
             <p className="text-slate-400 text-xs font-medium tracking-wide">Total Utang to Collect</p>
-            <h3 className="text-3xl font-black mt-1">₱ {totalDebt.toLocaleString('en-US', {minimumFractionDigits: 2})}</h3>
+            <h3 className="text-3xl font-black mt-1">₱ {totalDebt.toLocaleString('en-US', { minimumFractionDigits: 2 })}</h3>
           </div>
           <button className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 px-4 rounded-xl transition text-center text-sm shadow-md active:scale-98">
-            Record New Payment
+            Record New Ledger
           </button>
         </div>
 
@@ -97,28 +97,28 @@ export default function LedgerTab({ sukiList, setSukiList }) {
         <div className="flex justify-between items-center mt-2 px-1">
           <h4 className="font-extrabold text-slate-800 text-base">Suki Accounts</h4>
           <div className="relative">
-            <button 
+            <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className="p-2 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 transition"
             >
               <Filter size={16} />
             </button>
-            
+
             {isFilterOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 shadow-xl rounded-2xl p-1.5 z-20 animate-in fade-in zoom-in-95 duration-200">
-                <button 
+                <button
                   onClick={() => { setSortType('recent'); setIsFilterOpen(false); }}
                   className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition font-medium ${sortType === 'recent' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
                 >
                   Most Recent Active
                 </button>
-                <button 
+                <button
                   onClick={() => { setSortType('debt'); setIsFilterOpen(false); }}
                   className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition font-medium ${sortType === 'debt' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
                 >
                   Highest Debt First
                 </button>
-                <button 
+                <button
                   onClick={() => { setSortType('name'); setIsFilterOpen(false); }}
                   className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition font-medium ${sortType === 'name' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
                 >
@@ -132,8 +132,8 @@ export default function LedgerTab({ sukiList, setSukiList }) {
         {/* SUKI ACCOUNTS LIST */}
         <div className="flex flex-col gap-3 mb-6">
           {sortedSukiList.map((suki) => (
-            <div 
-              key={suki.id} 
+            <div
+              key={suki.id}
               onClick={() => suki.history.length > 0 && setSelectedSuki(suki)}
               className={`p-4 bg-white border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between transition active:bg-slate-50 ${suki.history.length > 0 ? 'cursor-pointer' : ''}`}
             >
@@ -184,7 +184,7 @@ export default function LedgerTab({ sukiList, setSukiList }) {
                       <p className="text-slate-400 text-[11px] mt-1">{log.date}</p>
                     </div>
                     <p className={`font-bold text-sm ${log.isPayment ? 'text-emerald-600' : 'text-slate-800'}`}>
-                      {log.isPayment ? '- ₱ ' : '₱ '}{Math.abs(log.amt).toLocaleString('en-US', {minimumFractionDigits: 2})}
+                      {log.isPayment ? '- ₱ ' : '₱ '}{Math.abs(log.amt).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                 ))}
@@ -193,13 +193,13 @@ export default function LedgerTab({ sukiList, setSukiList }) {
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-2.5 mt-2">
-              <button 
+              <button
                 onClick={() => sendSMSReminder(selectedSuki)}
                 className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm shadow-sm transition active:scale-98"
               >
                 <Send size={16} /> Send Reminder
               </button>
-              <button 
+              <button
                 onClick={() => setIsPaymentModalOpen(true)}
                 className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-600 font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm transition active:scale-98"
               >
@@ -223,8 +223,8 @@ export default function LedgerTab({ sukiList, setSukiList }) {
             <form onSubmit={handleRecordPayment} className="p-5 flex flex-col gap-4">
               <div>
                 <p className="text-xs text-slate-500 mb-1">Current Balance:</p>
-                <p className="text-lg font-bold text-red-500 mb-4">₱ {selectedSuki?.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
-                
+                <p className="text-lg font-bold text-red-500 mb-4">₱ {selectedSuki?.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Amount Paid (₱)</label>
                 <input
                   type="number"
@@ -240,11 +240,10 @@ export default function LedgerTab({ sukiList, setSukiList }) {
               <button
                 type="submit"
                 disabled={!paymentAmount || parseFloat(paymentAmount) <= 0}
-                className={`w-full font-bold py-3 rounded-xl transition ${
-                  paymentAmount && parseFloat(paymentAmount) > 0
+                className={`w-full font-bold py-3 rounded-xl transition ${paymentAmount && parseFloat(paymentAmount) > 0
                     ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
                     : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                }`}
+                  }`}
               >
                 Save Payment
               </button>
