@@ -30,6 +30,7 @@ export default function StockTab({ inventory, setInventory }) {
   };
 
   const lowStockCount = inventory.filter(item => item.qty <= item.min).length;
+  const totalAssetValue = inventory.reduce((sum, item) => sum + (item.qty * item.price), 0);
 
   const filteredStocks = inventory.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
@@ -39,12 +40,18 @@ export default function StockTab({ inventory, setInventory }) {
 
   return (
     <div className="flex flex-col min-h-full bg-slate-50/50">
-      <div className="bg-emerald-600 text-white pt-8 pb-12 px-6 rounded-b-[2.5rem] flex justify-between items-center shadow-md">
-        <h2 className="text-2xl font-bold tracking-wide">Inventory</h2>
-        <button className="bg-emerald-500/30 p-2.5 rounded-full hover:bg-emerald-500/50"><Bell size={20} /></button>
+      <div className="bg-emerald-600 text-white pt-8 pb-14 px-6 rounded-b-[2.5rem] flex flex-col gap-2 shadow-md">
+        <div className="flex justify-between items-center w-full">
+          <h2 className="text-2xl font-bold tracking-wide">Inventory</h2>
+          <button className="bg-emerald-500/30 p-2.5 rounded-full hover:bg-emerald-500/50"><Bell size={20} /></button>
+        </div>
+        <div className="mt-1 flex flex-col">
+          <span className="text-emerald-100 text-[10px] font-bold tracking-wider uppercase">Total Asset Value</span>
+          <span className="text-2xl font-black tracking-tight mt-0.5">₱{totalAssetValue.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+        </div>
       </div>
 
-      <div className="px-5 -mt-6 flex-1 flex flex-col gap-4">
+      <div className="px-5 -mt-8 flex-1 flex flex-col gap-4">
         {/* SEARCH BAR */}
         <div className="relative bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center px-4 py-3">
           <Search size={18} className="text-slate-400 mr-3" />
@@ -92,8 +99,12 @@ export default function StockTab({ inventory, setInventory }) {
                       <h4 className="font-bold text-slate-800 text-sm group-hover:text-emerald-600 transition">{item.name}</h4>
                       <Edit2 size={12} className="text-slate-300 group-hover:text-emerald-500 transition" />
                     </div>
-                    <p className="text-slate-400 text-xs mt-0.5">₱ {item.price.toFixed(2)}</p>
-                    <p className={`text-[10px] font-bold mt-2 tracking-wider uppercase ${isLow ? 'text-red-500' : 'text-slate-400'}`}>
+                    <p className="text-slate-700 font-semibold text-xs mt-0.5">Sell: ₱{item.price.toFixed(2)}</p>
+                    <p className="text-slate-400 text-[9px] mt-0.5 tracking-wide">
+                      Cost: ₱{item.cost.toFixed(2)} <span className="mx-1 opacity-50">|</span> 
+                      Profit: <span className="text-emerald-600 font-semibold">₱{(item.price - item.cost).toFixed(2)}</span>
+                    </p>
+                    <p className={`text-[9px] font-bold mt-2 tracking-wider uppercase ${isLow ? 'text-red-500' : 'text-slate-400'}`}>
                       MIN <span className="ml-0.5">{item.min}</span>
                     </p>
                   </div>
