@@ -11,12 +11,26 @@ import { useSupabaseData } from './hooks/useSupabaseData';
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [sukiList, setSukiList] = useState([]);
-  const [todayStats, setTodayStats] = useState(INITIAL_STATS);
+  const [todayStats, setTodayStats] = useState(() => {
+    const saved = localStorage.getItem('sukiledger_todayStats');
+    return saved ? { ...INITIAL_STATS, ...JSON.parse(saved) } : INITIAL_STATS;
+  });
   const [shiftHistory, setShiftHistory] = useState([]);
   const [inventory, setInventory] = useState([]);
-  const [settings, setSettings] = useState(INITIAL_SETTINGS);
+  const [settings, setSettings] = useState(() => {
+    const saved = localStorage.getItem('sukiledger_settings');
+    return saved ? { ...INITIAL_SETTINGS, ...JSON.parse(saved) } : INITIAL_SETTINGS;
+  });
 
   const { loading } = useSupabaseData(setInventory, setSukiList, setShiftHistory);
+
+  React.useEffect(() => {
+    localStorage.setItem('sukiledger_settings', JSON.stringify(settings));
+  }, [settings]);
+
+  React.useEffect(() => {
+    localStorage.setItem('sukiledger_todayStats', JSON.stringify(todayStats));
+  }, [todayStats]);
 
   React.useEffect(() => {
     setTodayStats(prev => ({ ...prev, startingCash: settings.startingCash }));
