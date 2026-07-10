@@ -115,7 +115,6 @@ export default function StockTab({ inventory, setInventory }) {
             );
           })}
         </div>
-        </div>
       </div>
 
       {/* EDIT ITEM MODAL */}
