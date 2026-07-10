@@ -5,16 +5,32 @@ export default function LedgerTab({ sukiList, setSukiList }) {
   const [selectedSuki, setSelectedSuki] = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortType, setSortType] = useState('recent');
 
   const totalDebt = sukiList.reduce((sum, suki) => sum + suki.balance, 0);
 
-  const sendSMSReminder = (suki) => {
-    const msg = `Hi ${suki.name}, maayong adlaw! Pahinumdom lang gikan sa tindahan sa imong kasamtangang balance nga ₱${suki.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}. Daghang salamat!`;
-    if (suki.phone) {
-      const smsLink = `sms:${suki.phone}?body=${encodeURIComponent(msg)}`;
-      window.open(smsLink, '_self');
+  const getLatestDate = (suki) => {
+    if (!suki.history || suki.history.length === 0) return 0;
+    return new Date(suki.history[0].date).getTime();
+  };
+
+  const sortedSukiList = [...sukiList].sort((a, b) => {
+    if (sortType === 'name') {
+      return a.name.localeCompare(b.name);
+    } else if (sortType === 'debt') {
+      return b.balance - a.balance;
     } else {
-      navigator.clipboard.writeText(msg);
+      return getLatestDate(b) - getLatestDate(a);
+    }
+  });
+
+  const sendSMSReminder = (suki) => {
+    const reminderMessage = `Maayong adlaw, ${suki.name}! Reminder lang gikan sa tindahan bahin sa imong kasamtangang utang ledger nga nagkantidad og ₱${suki.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}. Pwede ra nimo ma-settle sa tindahan kung hayahay na ka. Salamat kaayo!`;
+    if (suki.phone) {
+      window.location.href = `sms:${suki.phone}?body=${encodeURIComponent(reminderMessage)}`;
+    } else {
+      navigator.clipboard.writeText(reminderMessage);
       alert(`Reminder text copied to clipboard for ${suki.name}! Wala pay phone number nga na-save.`);
     }
   };
@@ -80,12 +96,42 @@ export default function LedgerTab({ sukiList, setSukiList }) {
         {/* LIST TITLE SECTION */}
         <div className="flex justify-between items-center mt-2 px-1">
           <h4 className="font-extrabold text-slate-800 text-base">Suki Accounts</h4>
-          <button className="p-2 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 transition"><Filter size={16} /></button>
+          <div className="relative">
+            <button 
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="p-2 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 transition"
+            >
+              <Filter size={16} />
+            </button>
+            
+            {isFilterOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 shadow-xl rounded-2xl p-1.5 z-20 animate-in fade-in zoom-in-95 duration-200">
+                <button 
+                  onClick={() => { setSortType('recent'); setIsFilterOpen(false); }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition font-medium ${sortType === 'recent' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
+                >
+                  Most Recent Active
+                </button>
+                <button 
+                  onClick={() => { setSortType('debt'); setIsFilterOpen(false); }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition font-medium ${sortType === 'debt' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
+                >
+                  Highest Debt First
+                </button>
+                <button 
+                  onClick={() => { setSortType('name'); setIsFilterOpen(false); }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition font-medium ${sortType === 'name' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
+                >
+                  Name (A-Z)
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* SUKI ACCOUNTS LIST */}
         <div className="flex flex-col gap-3 mb-6">
-          {sukiList.map((suki) => (
+          {sortedSukiList.map((suki) => (
             <div 
               key={suki.id} 
               onClick={() => suki.history.length > 0 && setSelectedSuki(suki)}
