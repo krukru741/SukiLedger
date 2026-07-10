@@ -26,9 +26,14 @@ export default function HomeTab({ sukiList, setSukiList, todayStats, setTodaySta
   const [cashReceived, setCashReceived] = useState('');
   
   // Notifications & Time
-  const [hasNotif, setHasNotif] = useState(true);
+  const lowStockItems = inventory.filter(i => i.qty <= i.min);
+  const [hasNotif, setHasNotif] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    if (lowStockItems.length > 0) setHasNotif(true);
+  }, [lowStockItems.length]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -113,14 +118,22 @@ export default function HomeTab({ sukiList, setSukiList, todayStats, setTodaySta
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Notifications</p>
                   <button onClick={() => setIsNotifOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={14} /></button>
                 </div>
-                <div className="p-4 flex gap-3 items-start bg-red-50/30">
-                  <div className="p-2 bg-red-100 text-red-500 rounded-xl mt-0.5"><Package size={16} /></div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-800">Low Stock Alert</p>
-                    <p className="text-xs text-slate-600 mt-1">
-                      <span className="font-semibold text-red-500">Pancit Canton</span> has reached its minimum threshold (3 items left).
-                    </p>
-                  </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {lowStockItems.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-slate-400">All stocks are good!</div>
+                  ) : (
+                    lowStockItems.map(item => (
+                      <div key={item.id} className="p-4 flex gap-3 items-start bg-red-50/30 border-b border-red-50/50 last:border-0">
+                        <div className="p-2 bg-red-100 text-red-500 rounded-xl mt-0.5"><Package size={16} /></div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-800">Low Stock Alert</p>
+                          <p className="text-xs text-slate-600 mt-1">
+                            <span className="font-semibold text-red-500">{item.name}</span> has reached its minimum threshold ({item.qty} items left).
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
