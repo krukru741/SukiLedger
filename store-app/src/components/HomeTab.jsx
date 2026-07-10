@@ -133,9 +133,10 @@ export default function HomeTab({ sukiList, setSukiList, todayStats, setTodaySta
         <div onClick={() => setIsSalesReportOpen(true)} className="bg-white border border-emerald-50/60 p-6 rounded-3xl shadow-sm bg-gradient-to-br from-white to-emerald-50/20 flex justify-between items-center cursor-pointer hover:shadow-md hover:scale-[1.01] transition transform active:scale-95">
           {(() => {
             const todaySales = todayStats.cash + todayStats.credit;
-            const yesterdaySales = 1102.22;
-            const isGrowth = todaySales >= yesterdaySales;
-            const changePercent = Math.abs(((todaySales - yesterdaySales) / yesterdaySales) * 100).toFixed(1);
+            const lastShift = shiftHistory && shiftHistory.length > 0 ? shiftHistory[shiftHistory.length - 1] : null;
+            const yesterdaySales = lastShift ? (lastShift.cash + lastShift.credit) : 0;
+            const isGrowth = yesterdaySales === 0 ? true : todaySales >= yesterdaySales;
+            const changePercent = yesterdaySales === 0 ? 100 : Math.abs(((todaySales - yesterdaySales) / yesterdaySales) * 100).toFixed(1);
             const yesterdayColor = yesterdaySales > todaySales ? 'text-blue-500' : 'text-red-500';
             return (
               <>
