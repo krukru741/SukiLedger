@@ -19,6 +19,17 @@ export default function LedgerTab({ sukiList, setSukiList }) {
     }
   };
 
+  const getOverdueDays = (suki) => {
+    if (suki.balance <= 0 || !suki.history || suki.history.length === 0) return 0;
+    // The oldest transaction is at the end of the array
+    const oldestTx = suki.history[suki.history.length - 1];
+    const oldestDate = new Date(oldestTx.date);
+    const today = new Date();
+    const diffTime = today - oldestDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
   const handleRecordPayment = (e) => {
     e.preventDefault();
     const amt = parseFloat(paymentAmount);
@@ -84,7 +95,14 @@ export default function LedgerTab({ sukiList, setSukiList }) {
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base ${suki.bg}`}>{suki.initial}</div>
                 <div>
                   <h5 className="font-bold text-slate-800 text-sm">{suki.name}</h5>
-                  <p className="text-slate-400 text-xs mt-0.5">Last active: {suki.lastActive}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-slate-400 text-xs">Last active: {suki.lastActive}</p>
+                    {getOverdueDays(suki) >= 7 && (
+                      <span className="bg-orange-100 text-orange-600 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                        Overdue {getOverdueDays(suki)}d
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <p className="font-bold text-red-500 text-sm">₱ {suki.balance.toLocaleString()}</p>
