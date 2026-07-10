@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import HomeTab from './components/HomeTab';
 import StockTab from './components/StockTab';
 import LedgerTab from './components/LedgerTab';
-import { LayoutGrid, Package, BookOpen, Bell, Utensils, Coffee, ShoppingBag, Droplet } from 'lucide-react';
+import AnalyticsTab from './components/AnalyticsTab';
+import { LayoutGrid, Package, BookOpen, Bell, Utensils, Coffee, ShoppingBag, Droplet, BarChart2 } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -82,6 +83,12 @@ export default function App() {
           >
             <BookOpen size={20} /> Suki Ledger
           </button>
+          <button 
+            onClick={() => setActiveTab('analytics')} 
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${activeTab === 'analytics' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
+            <BarChart2 size={20} /> Analytics
+          </button>
         </nav>
       </aside>
 
@@ -92,6 +99,7 @@ export default function App() {
           {activeTab === 'home' && <HomeTab sukiList={sukiList} setSukiList={setSukiList} todayStats={todayStats} setTodayStats={setTodayStats} shiftHistory={shiftHistory} setShiftHistory={setShiftHistory} inventory={inventory} setInventory={setInventory} />}
           {activeTab === 'stock' && <StockTab inventory={inventory} setInventory={setInventory} />}
           {activeTab === 'ledger' && <LedgerTab sukiList={sukiList} setSukiList={setSukiList} />}
+          {activeTab === 'analytics' && <AnalyticsTab shiftHistory={shiftHistory} inventory={inventory} sukiList={sukiList} todayStats={todayStats} />}
         </div>
       </main>
 
@@ -108,6 +116,10 @@ export default function App() {
         <button onClick={() => setActiveTab('ledger')} className={`flex flex-col items-center gap-0.5 ${activeTab === 'ledger' ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
           <BookOpen size={22} />
           <span className="text-xs">Ledger</span>
+        </button>
+        <button onClick={() => setActiveTab('analytics')} className={`flex flex-col items-center gap-0.5 ${activeTab === 'analytics' ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
+          <BarChart2 size={22} />
+          <span className="text-xs">Analytics</span>
         </button>
       </div>
     </div>
