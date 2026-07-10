@@ -47,7 +47,7 @@ export default function HomeTab({ settings, sukiList, setSukiList, todayStats, s
 
   // Handlers using Services
   const handleChargeToSuki = (suki) => {
-    const { total, dateStrForMsg, timeStr } = chargeToSuki({ suki, cart, setSukiList, setTodayStats });
+    const { total, dateStrForMsg, timeStr } = chargeToSuki({ suki, cart, setSukiList, setTodayStats, inventory, setInventory });
     
     // Build SMS from template
     const template = settings?.smsTemplate || 'Maayong adlaw, {name}! Reminder lang gikan sa {storeName} bahin sa imong kasamtangang utang ledger nga nagkantidad og {balance}. Pwede ra nimo ma-settle sa tindahan kung hayahay na ka. Salamat kaayo!';
@@ -66,7 +66,7 @@ export default function HomeTab({ settings, sukiList, setSukiList, todayStats, s
   };
 
   const handleChargeToNewSuki = ({ name, phone }) => {
-    const { total, dateStrForMsg, timeStr } = chargeToNewSuki({ name, phone, cart, setSukiList, setTodayStats });
+    const { total, dateStrForMsg, timeStr } = chargeToNewSuki({ name, phone, cart, setSukiList, setTodayStats, inventory, setInventory });
     
     // Build SMS from template
     const template = settings?.smsTemplate || 'Maayong adlaw, {name}! Reminder lang gikan sa {storeName} bahin sa imong kasamtangang utang ledger nga nagkantidad og {balance}. Pwede ra nimo ma-settle sa tindahan kung hayahay na ka. Salamat kaayo!';
@@ -85,7 +85,7 @@ export default function HomeTab({ settings, sukiList, setSukiList, todayStats, s
   };
 
   const handleConfirmCash = () => {
-    const { total, change } = confirmCashPayment({ cart, cashReceived, todayStats, setTodayStats });
+    const { total, change } = confirmCashPayment({ cart, cashReceived, todayStats, setTodayStats, inventory, setInventory });
     showToast({
       msg: `Payment Received: ₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}. Sukli: ₱${change.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       sms: ''

@@ -99,3 +99,22 @@ export const deleteInventoryItem = async ({ id, setInventory }) => {
     console.error('Error deleting inventory item:', error);
   }
 };
+
+/**
+ * Deduct stock from inventory based on cart items.
+ */
+export const deductInventoryStock = async ({ cart, inventory, setInventory }) => {
+  setInventory(prev => prev.map(item => {
+    const cartItem = cart.find(i => i.id === item.id);
+    return cartItem ? { ...item, qty: Math.max(0, item.qty - cartItem.qty) } : item;
+  }));
+
+  for (const cartItem of cart) {
+    const invItem = inventory.find(i => i.id === cartItem.id);
+    if (invItem) {
+      const newQty = Math.max(0, invItem.qty - cartItem.qty);
+      const { error } = await supabase.from('inventory').update({ qty: newQty }).eq('id', cartItem.id);
+      if (error) console.error('Failed to update stock for', cartItem.name, error);
+    }
+  }
+};

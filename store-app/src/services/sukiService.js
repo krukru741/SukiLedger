@@ -1,10 +1,11 @@
 // src/services/sukiService.js
 import { supabase } from '../lib/supabaseClient';
+import { deductInventoryStock } from './inventoryService';
 
 /**
  * Charge cart items to an existing suki's ledger.
  */
-export const chargeToSuki = async ({ suki, cart, setSukiList, setTodayStats }) => {
+export const chargeToSuki = async ({ suki, cart, setSukiList, setTodayStats, inventory, setInventory }) => {
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const costTotal = cart.reduce((s, i) => s + ((i.cost || i.price * 0.8) * i.qty), 0);
   const cartDesc = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
@@ -31,6 +32,10 @@ export const chargeToSuki = async ({ suki, cart, setSukiList, setTodayStats }) =
     transactions: [{ id: Date.now(), name: cartDesc, time: timeStr, amount: total, type: 'credit' }, ...(prev.transactions || [])]
   }));
 
+  if (cart && cart.length > 0 && inventory && setInventory) {
+    deductInventoryStock({ cart, inventory, setInventory });
+  }
+
   // 2. DB Updates
   // Update suki_accounts balance
   await supabase.from('suki_accounts').update({ 
@@ -51,7 +56,7 @@ export const chargeToSuki = async ({ suki, cart, setSukiList, setTodayStats }) =
 /**
  * Create a new suki profile and charge the cart to them immediately.
  */
-export const chargeToNewSuki = async ({ name, phone, cart, setSukiList, setTodayStats }) => {
+export const chargeToNewSuki = async ({ name, phone, cart, setSukiList, setTodayStats, inventory, setInventory }) => {
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const costTotal = cart.reduce((s, i) => s + ((i.cost || i.price * 0.8) * i.qty), 0);
   const cartDesc = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
@@ -101,6 +106,10 @@ export const chargeToNewSuki = async ({ name, phone, cart, setSukiList, setToday
     profit: prev.profit + (total - costTotal),
     transactions: [{ id: Date.now(), name: cartDesc, time: timeStr, amount: total, type: 'credit' }, ...(prev.transactions || [])]
   }));
+
+  if (cart && cart.length > 0 && inventory && setInventory) {
+    deductInventoryStock({ cart, inventory, setInventory });
+  }
 
   return { total, cartDesc, dateStrForMsg, timeStr, newSuki };
 };

@@ -1,11 +1,12 @@
 // src/services/statsService.js
 import { supabase } from '../lib/supabaseClient';
+import { deductInventoryStock } from './inventoryService';
 
 /**
  * Record a cash payment sale.
  * We update the local state for today's running shift.
  */
-export const confirmCashPayment = ({ cart, cashReceived, todayStats, setTodayStats }) => {
+export const confirmCashPayment = ({ cart, cashReceived, todayStats, setTodayStats, inventory, setInventory }) => {
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const received = parseFloat(cashReceived) || total;
   const change = received - total;
@@ -17,6 +18,11 @@ export const confirmCashPayment = ({ cart, cashReceived, todayStats, setTodaySta
     profit: prev.profit + (total - costTotal),
     transactions: [{ id: Date.now(), name: cart.map(i=>`${i.qty}x ${i.name}`).join(', '), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), amount: total, type: 'cash' }, ...(prev.transactions || [])]
   }));
+
+  // Deduct from inventory
+  if (cart && cart.length > 0 && inventory && setInventory) {
+    deductInventoryStock({ cart, inventory, setInventory });
+  }
 
   // We could record a transaction here if we had an ongoing "active" shift in the DB,
   // but for simplicity we just aggregate in local state and save on closeShift.
