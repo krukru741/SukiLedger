@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Suki Ledger</title>
+    
+    <!-- Tailwind CSS (CDN for zero-build setup) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        },
+                        slate: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #f1f5f9; /* slate-100 */
+            margin: 0;
+            padding: 0;
+        }
+        /* Hide scrollbar for clean mobile look */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="text-slate-900 antialiased h-screen w-screen overflow-hidden bg-slate-50">
+    <!-- App Container -->
+    <div id="root" class="w-full h-full relative overflow-hidden flex"></div>
+
+    <!-- App Source -->
+    <script type="text/babel">
+const { useState, useEffect } = React;
+
+// --- Helper Components ---
+
+const Icon = ({ name, className = "" }) => {
+    useEffect(() => {
+        lucide.createIcons();
+    });
+    return <i data-lucide={name} className={className}></i>;
+};
+
+const Header = ({ title }) => (
+    <div className="pt-12 md:pt-8 pb-4 px-6 md:px-10 bg-emerald-600 rounded-b-[2rem] md:rounded-none shadow-md md:shadow-sm z-10 relative">
+        <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-white tracking-tight">{title}</h1>
+            <div className="bg-emerald-500 p-2 rounded-full cursor-pointer hover:bg-emerald-400 transition shadow-sm">
+                <Icon name="bell" className="text-white w-5 h-5" />
+            </div>
+        </div>
+    </div>
+);
+
+const Sidebar = ({ activeTab, setActiveTab }) => (
+    <div className="hidden md:flex flex-col w-72 bg-slate-900 text-white h-full shadow-2xl z-30 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div className="p-8 relative z-10">
+            <h1 className="text-2xl font-black text-emerald-400 tracking-tight flex items-center">
+                <Icon name="store" className="w-8 h-8 mr-3 stroke-[2.5]" /> SukiLedger
+            </h1>
+        </div>
+        <div className="flex flex-col space-y-2 px-5 mt-4 flex-1 relative z-10">
+            <button 
+                onClick={() => setActiveTab('dashboard')}
+                className={`flex items-center space-x-4 px-5 py-4 rounded-2xl transition-all ${activeTab === 'dashboard' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+                <Icon name="layout-dashboard" className={`w-6 h-6 ${activeTab === 'dashboard' ? 'stroke-[2.5]' : ''}`} />
+                <span className="font-semibold text-sm tracking-wide">Overview</span>
+            </button>
+            <button 
+                onClick={() => setActiveTab('inventory')}
+                className={`flex items-center space-x-4 px-5 py-4 rounded-2xl transition-all ${activeTab === 'inventory' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+                <Icon name="package" className={`w-6 h-6 ${activeTab === 'inventory' ? 'stroke-[2.5]' : ''}`} />
+                <span className="font-semibold text-sm tracking-wide">Inventory</span>
+            </button>
+            <button 
+                onClick={() => setActiveTab('ledger')}
+                className={`flex items-center space-x-4 px-5 py-4 rounded-2xl transition-all ${activeTab === 'ledger' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+                <Icon name="book-user" className={`w-6 h-6 ${activeTab === 'ledger' ? 'stroke-[2.5]' : ''}`} />
+                <span className="font-semibold text-sm tracking-wide">Suki Ledger</span>
+            </button>
+        </div>
+        <div className="p-8 relative z-10">
+            <button className="flex items-center space-x-3 text-slate-400 hover:text-white transition w-full">
+                <Icon name="settings" className="w-5 h-5" />
+                <span className="font-medium text-sm">Settings</span>
+            </button>
+        </div>
+    </div>
+);
+
+// --- Views ---
+
+const Dashboard = () => {
+    return (
+        <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-6 md:space-y-8 pb-28 md:pb-10">
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                {/* Left Column (Stats & Actions) */}
+                <div className="lg:col-span-2 space-y-6 md:space-y-8">
+                    {/* Stats Card */}
+                    <div className="bg-gradient-to-br from-white to-emerald-50/50 rounded-3xl p-6 md:p-8 shadow-sm border border-emerald-100 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-6 opacity-10">
+                            <Icon name="wallet" className="w-24 h-24 text-emerald-600" />
+                        </div>
+                        <p className="text-emerald-800/70 text-sm font-semibold mb-2">Today's Sales</p>
+                        <h2 className="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-tight">₱ 1,240.00</h2>
+                        <div className="flex items-center mt-5 text-sm">
+                            <span className="flex items-center text-emerald-700 font-bold bg-emerald-100/80 px-3 py-1.5 rounded-lg">
+                                <Icon name="trending-up" className="w-4 h-4 mr-1.5 stroke-[3]" />
+                                +12.5%
+                            </span>
+                            <span className="text-slate-500 ml-3 font-medium">vs yesterday</span>
+                        </div>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="grid grid-cols-2 gap-4 md:gap-6">
+                        <button className="bg-emerald-500 hover:bg-emerald-600 transition p-6 rounded-3xl flex flex-col items-center justify-center space-y-3 shadow-sm active:scale-95 group">
+                            <div className="bg-white/20 p-4 rounded-2xl text-white group-hover:bg-white/30 transition">
+                                <Icon name="plus" className="w-7 h-7 stroke-[3]" />
+                            </div>
+                            <span className="text-white font-semibold text-sm md:text-base">New Sale</span>
+                        </button>
+                        <button className="bg-white hover:bg-slate-50 transition p-6 rounded-3xl flex flex-col items-center justify-center space-y-3 border border-slate-200 shadow-sm active:scale-95 group">
+                            <div className="bg-slate-100 p-4 rounded-2xl text-slate-700 group-hover:bg-slate-200 transition">
+                                <Icon name="user-plus" className="w-7 h-7 stroke-[2.5]" />
+                            </div>
+                            <span className="text-slate-700 font-semibold text-sm md:text-base">Add Suki</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Right Column (Recent Transactions) */}
+                <div className="lg:col-span-1">
+                    <div className="flex justify-between items-center mb-5 px-1">
+                        <h3 className="font-bold text-slate-800 text-lg">Recent Transactions</h3>
+                        <span className="text-emerald-600 text-sm font-semibold cursor-pointer hover:text-emerald-700">See all</span>
+                    </div>
+                    <div className="bg-white rounded-3xl shadow-sm border border-slate-100 divide-y divide-slate-50 overflow-hidden">
+                        {[
+                            { time: '10:42 AM', items: '2x Coca-Cola 1.5L', price: '₱ 150.00', icon: 'shopping-bag' },
+                            { time: '09:15 AM', items: '1x Load Globe 50', price: '₱ 53.00', icon: 'smartphone' },
+                            { time: '08:30 AM', items: 'Bread, Eggs, Milk', price: '₱ 210.00', icon: 'shopping-basket' },
+                            { time: '07:45 AM', items: 'Pancit Canton x4', price: '₱ 60.00', icon: 'shopping-bag' },
+                            { time: '07:15 AM', items: 'Coffee 3-in-1', price: '₱ 15.00', icon: 'coffee' },
+                        ].map((tx, i) => (
+                            <div key={i} className="p-5 flex items-center justify-between hover:bg-slate-50 transition cursor-pointer">
+                                <div className="flex items-center space-x-4">
+                                    <div className="bg-slate-100 p-3 rounded-xl text-slate-600">
+                                        <Icon name={tx.icon} className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-semibold text-slate-800">{tx.items}</p>
+                                        <p className="text-xs font-medium text-slate-400 mt-0.5">{tx.time}</p>
+                                    </div>
+                                </div>
+                                <span className="font-bold text-slate-700">{tx.price}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    );
+};
+
+const Inventory = () => {
+    const [items, setItems] = useState([
+        { id: 1, name: 'Coca-Cola 1.5L', stock: 12, minThreshold: 10, price: '₱ 75.00' },
+        { id: 2, name: 'Pancit Canton', stock: 3, minThreshold: 5, price: '₱ 15.00' },
+        { id: 3, name: 'Bear Brand 150g', stock: 24, minThreshold: 10, price: '₱ 55.00' },
+        { id: 4, name: 'Lucky Me Noodles', stock: 0, minThreshold: 5, price: '₱ 12.00' },
+        { id: 5, name: 'San Miguel Pale', stock: 45, minThreshold: 20, price: '₱ 45.00' },
+        { id: 6, name: 'Datu Puti Vinegar', stock: 8, minThreshold: 10, price: '₱ 20.00' },
+    ]);
+
+    const updateStock = (id, delta) => {
+        setItems(items.map(item => {
+            if (item.id === id) {
+                const newStock = Math.max(0, item.stock + delta);
+                return { ...item, stock: newStock };
+            }
+            return item;
+        }));
+    };
+
+    return (
+        <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-6 pb-28 md:pb-10">
+            <div className="relative group max-w-2xl">
+                <Icon name="search" className="absolute left-5 top-4 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition" />
+                <input 
+                    type="text" 
+                    placeholder="Search inventory..." 
+                    className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-14 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm transition"
+                />
+            </div>
+
+            <div>
+                {/* Header row (hidden on mobile, visible on md+) */}
+                <div className="hidden md:flex px-6 justify-between items-center text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-3 mt-8">
+                    <span className="w-1/3">Product Name</span>
+                    <span className="w-1/4">Price</span>
+                    <span className="w-1/6 text-center">Min Threshold</span>
+                    <span className="w-1/4 text-center">Stock Controls</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
+                    {items.map((item) => {
+                        const isLowStock = item.stock <= item.minThreshold;
+                        
+                        return (
+                            <div key={item.id} className={`p-5 rounded-2xl shadow-sm border transition flex flex-col md:flex-row md:items-center justify-between gap-4 ${isLowStock ? 'bg-red-50/50 border-red-100 hover:border-red-200' : 'bg-white border-slate-100 hover:border-emerald-100'}`}>
+                                
+                                <div className="flex items-center space-x-4 md:w-1/3">
+                                    <div className={`w-1.5 h-12 rounded-full ${isLowStock ? 'bg-red-400' : 'bg-emerald-500'}`}></div>
+                                    <div>
+                                        <h4 className={`font-bold ${isLowStock ? 'text-red-900' : 'text-slate-800'}`}>{item.name}</h4>
+                                        <p className={`text-xs font-semibold mt-1 md:hidden ${isLowStock ? 'text-red-500/80' : 'text-slate-400'}`}>
+                                            {item.price}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className={`hidden md:block md:w-1/4 font-semibold text-sm ${isLowStock ? 'text-red-500/80' : 'text-slate-500'}`}>
+                                    {item.price}
+                                </div>
+
+                                <div className="flex items-center justify-between md:justify-end space-x-6 md:w-5/12">
+                                    {/* Min Threshold */}
+                                    <div className="text-center flex flex-col md:flex-row md:items-center md:space-x-2">
+                                        <span className="text-[10px] uppercase font-bold text-slate-400 md:hidden">Min</span>
+                                        <span className={`text-sm font-bold ${isLowStock ? 'text-red-400' : 'text-slate-300'}`}>{item.minThreshold}</span>
+                                    </div>
+
+                                    {/* Stock Controls */}
+                                    <div className="flex items-center space-x-4 bg-slate-50 p-1.5 rounded-full border border-slate-100">
+                                        <button 
+                                            onClick={() => updateStock(item.id, -1)}
+                                            className={`w-9 h-9 rounded-full flex items-center justify-center transition active:scale-90 shadow-sm ${isLowStock ? 'bg-white text-red-600 hover:bg-red-50' : 'bg-white text-slate-600 hover:bg-slate-100'}`}
+                                        >
+                                            <Icon name="minus" className="w-4 h-4 stroke-[3]" />
+                                        </button>
+                                        
+                                        <span className={`font-bold w-8 text-center text-lg ${isLowStock ? 'text-red-600' : 'text-slate-800'}`}>
+                                            {item.stock}
+                                        </span>
+                                        
+                                        <button 
+                                            onClick={() => updateStock(item.id, 1)}
+                                            className={`w-9 h-9 rounded-full flex items-center justify-center transition active:scale-90 shadow-sm ${isLowStock ? 'bg-white text-red-600 hover:bg-red-50' : 'bg-white text-emerald-600 hover:bg-emerald-50'}`}
+                                        >
+                                            <Icon name="plus" className="w-4 h-4 stroke-[3]" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const SukiLedger = () => {
+    const [selectedSuki, setSelectedSuki] = useState(null);
+    const [copied, setCopied] = useState(false);
+
+    const sukiData = [
+        { 
+            id: 1, 
+            name: 'Aling Nena', 
+            balance: 1200, 
+            lastActive: '2 days ago', 
+            color: 'bg-emerald-100 text-emerald-700',
+            history: [
+                { date: '10/24/2023', items: '5kg Rice, 1L Oil', amount: 450 },
+                { date: '10/22/2023', items: 'Canned Goods, Bread', amount: 350 },
+                { date: '10/18/2023', items: 'Detergent, Load', amount: 400 },
+            ]
+        },
+        { 
+            id: 2, 
+            name: 'Mang Juan', 
+            balance: 850, 
+            lastActive: 'Yesterday', 
+            color: 'bg-amber-100 text-amber-700',
+            history: [
+                { date: '10/25/2023', items: 'San Miguel x4, Cigarettes', amount: 500 },
+                { date: '10/20/2023', items: 'Snacks, Softdrinks', amount: 350 },
+            ]
+        },
+        { 
+            id: 3, 
+            name: 'Kuya Pedro', 
+            balance: 1400, 
+            lastActive: 'Today', 
+            color: 'bg-blue-100 text-blue-700',
+            history: [
+                { date: '10/26/2023', items: 'Diapers, Milk Formula', amount: 1200 },
+                { date: '10/21/2023', items: 'Eggs, Hotdog', amount: 200 },
+            ]
+        },
+        { 
+            id: 4, 
+            name: 'Ate Susan', 
+            balance: 450, 
+            lastActive: '1 week ago', 
+            color: 'bg-purple-100 text-purple-700',
+            history: [
+                { date: '10/15/2023', items: 'Shampoo, Soap, Toothpaste', amount: 450 },
+            ]
+        },
+    ];
+
+    const totalUtang = sukiData.reduce((acc, curr) => acc + curr.balance, 0);
+
+    const handleSendReminder = (suki) => {
+        const message = `Hi ${suki.name}! Good day. This is a polite reminder from our sari-sari store regarding your outstanding balance of ₱${suki.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}. Please let us know when you can settle the amount. Maraming salamat po!`;
+        
+        navigator.clipboard.writeText(message).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+            const textArea = document.createElement("textarea");
+            textArea.value = message;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } catch (err) {}
+            document.body.removeChild(textArea);
+        });
+    };
+
+    return (
+        <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-6 md:space-y-10 pb-28 md:pb-10 relative">
+            <div className="bg-slate-900 rounded-3xl p-8 md:p-10 shadow-xl text-white relative overflow-hidden max-w-4xl">
+                <div className="absolute -right-6 -top-6 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl"></div>
+                
+                <div className="flex justify-between items-start mb-8 relative z-10">
+                    <div>
+                        <p className="text-slate-400 text-sm md:text-base font-semibold mb-2">Total Utang to Collect</p>
+                        <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight">₱ {totalUtang.toLocaleString('en-US', {minimumFractionDigits: 2})}</h2>
+                    </div>
+                    <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700 hidden md:block">
+                        <Icon name="users" className="w-8 h-8 text-emerald-400" />
+                    </div>
+                </div>
+                <button className="w-full md:w-auto md:px-8 bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-4 rounded-xl transition text-sm md:text-base shadow-lg shadow-emerald-500/20 active:scale-[0.98]">
+                    Record New Payment
+                </button>
+            </div>
+
+            <div className="max-w-4xl">
+                <div className="flex justify-between items-center mb-5 px-1">
+                    <h3 className="font-bold text-slate-800 text-xl">Suki Accounts</h3>
+                    <div className="bg-slate-200 p-2 rounded-xl cursor-pointer hover:bg-slate-300 transition">
+                        <Icon name="filter" className="w-5 h-5 text-slate-600" />
+                    </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {sukiData.map((suki) => (
+                        <div 
+                            key={suki.id} 
+                            onClick={() => { setSelectedSuki(suki); setCopied(false); }}
+                            className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex items-center justify-between cursor-pointer hover:border-emerald-200 hover:shadow-md transition active:scale-[0.98]"
+                        >
+                            <div className="flex items-center space-x-4">
+                                <div className={`w-14 h-14 rounded-2xl ${suki.color} flex items-center justify-center font-bold text-xl`}>
+                                    {suki.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-slate-800">{suki.name}</h4>
+                                    <p className="text-xs font-medium text-slate-400 mt-1">Last active: {suki.lastActive}</p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <span className="font-bold text-red-500 text-lg">₱ {suki.balance.toLocaleString('en-US')}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Modal / Bottom Sheet overlay */}
+            {selectedSuki && (
+                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-all p-0 md:p-6" onClick={() => setSelectedSuki(null)}>
+                    {/* Modal Content */}
+                    <div 
+                        className="bg-white w-full md:w-[500px] h-[85vh] md:h-auto md:max-h-[85vh] rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl p-6 md:p-8 flex flex-col animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Drag Handle (Mobile only) */}
+                        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 md:hidden"></div>
+                        
+                        {/* Header */}
+                        <div className="flex justify-between items-start mb-8">
+                            <div className="flex items-center space-x-4">
+                                <div className={`w-16 h-16 rounded-2xl ${selectedSuki.color} flex items-center justify-center font-bold text-3xl`}>
+                                    {selectedSuki.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-800">{selectedSuki.name}</h2>
+                                    <p className="text-sm font-medium text-slate-500 mt-1">Total Utang: <span className="text-red-500 font-bold">₱ {selectedSuki.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}</span></p>
+                                </div>
+                            </div>
+                            <button onClick={() => setSelectedSuki(null)} className="p-2.5 bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition active:scale-90">
+                                <Icon name="x" className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Debt History */}
+                        <div className="flex-1 overflow-y-auto pr-2 -mr-2 space-y-4 mb-8">
+                            <h3 className="font-bold text-slate-800 uppercase text-xs tracking-wider">Debt History</h3>
+                            <div className="space-y-3">
+                                {selectedSuki.history.map((record, i) => (
+                                    <div key={i} className="p-5 bg-slate-50 border border-slate-100 rounded-2xl flex justify-between items-center">
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-700">{record.items}</p>
+                                            <p className="text-xs font-medium text-slate-400 mt-1.5">{record.date}</p>
+                                        </div>
+                                        <span className="font-bold text-slate-800 text-lg">₱ {record.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="space-y-3 pt-4 border-t border-slate-100">
+                            <button 
+                                onClick={() => handleSendReminder(selectedSuki)}
+                                className={`w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center transition-all shadow-lg active:scale-[0.98] ${copied ? 'bg-emerald-500 shadow-emerald-500/20 scale-[0.98]' : 'bg-slate-800 shadow-slate-800/20 hover:bg-slate-700'}`}
+                            >
+                                {copied ? (
+                                    <>
+                                        <Icon name="check" className="w-5 h-5 mr-2" />
+                                        Template Copied!
+                                    </>
+                                ) : (
+                                    <>
+                                        <Icon name="send" className="w-5 h-5 mr-2" />
+                                        Send Reminder
+                                    </>
+                                )}
+                            </button>
+                            <button className="w-full py-4 rounded-2xl font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition active:scale-[0.98]">
+                                Record Payment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+// --- Main App Component ---
+
+const App = () => {
+    const [activeTab, setActiveTab] = useState('dashboard');
+
+    const renderView = () => {
+        switch (activeTab) {
+            case 'dashboard': return <Dashboard />;
+            case 'inventory': return <Inventory />;
+            case 'ledger': return <SukiLedger />;
+            default: return <Dashboard />;
+        }
+    };
+
+    const getTitle = () => {
+        switch (activeTab) {
+            case 'dashboard': return 'Overview';
+            case 'inventory': return 'Inventory';
+            case 'ledger': return 'Suki Ledger';
+            default: return 'App';
+        }
+    };
+
+    return (
+        <div className="flex w-full h-full bg-slate-50 relative">
+            
+            {/* Desktop Sidebar */}
+            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+            
+            {/* Main Content Area */}
+            <div className="flex flex-col flex-1 relative overflow-hidden h-full">
+                <Header title={getTitle()} />
+                
+                {/* Scrollable Content Area */}
+                {renderView()}
+
+                {/* Floating Bottom Navigation (Mobile Only) */}
+                <div className="md:hidden absolute bottom-6 left-6 right-6 z-20">
+                    <div className="bg-white/90 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 px-6 py-3.5 flex justify-between items-center">
+                        
+                        <button 
+                            onClick={() => setActiveTab('dashboard')}
+                            className={`flex flex-col items-center space-y-1.5 transition-all duration-300 w-16 ${activeTab === 'dashboard' ? 'text-emerald-600 scale-110' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            <div className="relative">
+                                <Icon name="layout-dashboard" className={`w-6 h-6 ${activeTab === 'dashboard' ? 'stroke-[2.5]' : 'stroke-2'}`} />
+                                {activeTab === 'dashboard' && <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-1 h-1 bg-emerald-600 rounded-full"></div>}
+                            </div>
+                            <span className={`text-[10px] tracking-wide ${activeTab === 'dashboard' ? 'font-bold' : 'font-medium'}`}>Home</span>
+                        </button>
+
+                        <button 
+                            onClick={() => setActiveTab('inventory')}
+                            className={`flex flex-col items-center space-y-1.5 transition-all duration-300 w-16 ${activeTab === 'inventory' ? 'text-emerald-600 scale-110' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            <div className="relative">
+                                <Icon name="package" className={`w-6 h-6 ${activeTab === 'inventory' ? 'stroke-[2.5]' : 'stroke-2'}`} />
+                                {activeTab === 'inventory' && <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-1 h-1 bg-emerald-600 rounded-full"></div>}
+                            </div>
+                            <span className={`text-[10px] tracking-wide ${activeTab === 'inventory' ? 'font-bold' : 'font-medium'}`}>Stock</span>
+                        </button>
+
+                        <button 
+                            onClick={() => setActiveTab('ledger')}
+                            className={`flex flex-col items-center space-y-1.5 transition-all duration-300 w-16 ${activeTab === 'ledger' ? 'text-emerald-600 scale-110' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            <div className="relative">
+                                <Icon name="book-user" className={`w-6 h-6 ${activeTab === 'ledger' ? 'stroke-[2.5]' : 'stroke-2'}`} />
+                                {activeTab === 'ledger' && <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-1 h-1 bg-emerald-600 rounded-full"></div>}
+                            </div>
+                            <span className={`text-[10px] tracking-wide ${activeTab === 'ledger' ? 'font-bold' : 'font-medium'}`}>Ledger</span>
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+    </script>
+</body>
+</html>
