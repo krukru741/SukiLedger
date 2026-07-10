@@ -1,26 +1,20 @@
 import React, { useState } from 'react';
 import { Bell, Filter, X, Send, CreditCard } from 'lucide-react';
 
-export default function LedgerTab() {
+export default function LedgerTab({ sukiList, setSukiList }) {
   const [selectedSuki, setSelectedSuki] = useState(null);
-  
-  const sukiList = [
-    { id: 1, name: 'Aling Nena', balance: 1200, lastActive: '2 days ago', initial: 'A', bg: 'bg-emerald-100 text-emerald-700',
-      history: [
-        { desc: '5kg Rice, 1L Oil', date: '10/24/2023', amt: 450 },
-        { desc: 'Canned Goods, Bread', date: '10/22/2023', amt: 350 },
-        { desc: 'Detergent, Load', date: '10/18/2023', amt: 400 }
-      ]
-    },
-    { id: 2, name: 'Mang Juan', balance: 850, lastActive: 'Yesterday', initial: 'M', bg: 'bg-amber-100 text-amber-700', history: [] },
-    { id: 3, name: 'Kuya Pedro', balance: 1400, lastActive: 'Today', initial: 'K', bg: 'bg-blue-100 text-blue-700', history: [] },
-    { id: 4, name: 'Ate Susan', balance: 450, lastActive: '1 week ago', initial: 'A', bg: 'bg-purple-100 text-purple-700', history: [] }
-  ];
+
+  const totalDebt = sukiList.reduce((sum, suki) => sum + suki.balance, 0);
 
   const sendSMSReminder = (suki) => {
-    const msg = `Hi ${suki.name}, maayong adlaw! Pahinumdom lang gikan sa tindahan sa imong kasamtangang balance nga ₱${suki.balance.toLocaleString()}.00. Daghang salamat!`;
-    navigator.clipboard.writeText(msg);
-    alert(`Reminder text copied to clipboard for ${suki.name}! Pwede na nimo i-paste sa Messenger o SMS.`);
+    const msg = `Hi ${suki.name}, maayong adlaw! Pahinumdom lang gikan sa tindahan sa imong kasamtangang balance nga ₱${suki.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}. Daghang salamat!`;
+    if (suki.phone) {
+      const smsLink = `sms:${suki.phone}?body=${encodeURIComponent(msg)}`;
+      window.open(smsLink, '_self');
+    } else {
+      navigator.clipboard.writeText(msg);
+      alert(`Reminder text copied to clipboard for ${suki.name}! Wala pay phone number nga na-save.`);
+    }
   };
 
   return (
@@ -35,7 +29,7 @@ export default function LedgerTab() {
         <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-lg bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col gap-4">
           <div>
             <p className="text-slate-400 text-xs font-medium tracking-wide">Total Utang to Collect</p>
-            <h3 className="text-3xl font-black mt-1">₱ 3,900.00</h3>
+            <h3 className="text-3xl font-black mt-1">₱ {totalDebt.toLocaleString('en-US', {minimumFractionDigits: 2})}</h3>
           </div>
           <button className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 px-4 rounded-xl transition text-center text-sm shadow-md active:scale-98">
             Record New Payment
@@ -95,7 +89,7 @@ export default function LedgerTab() {
                       <p className="font-bold text-slate-700 text-sm">{log.desc}</p>
                       <p className="text-slate-400 text-[11px] mt-1">{log.date}</p>
                     </div>
-                    <p className="font-bold text-slate-800 text-sm">₱ {log.amt.toFixed(2)}</p>
+                    <p className="font-bold text-slate-800 text-sm">₱ {log.amt.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
                   </div>
                 ))}
               </div>
