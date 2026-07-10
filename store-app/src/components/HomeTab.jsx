@@ -33,6 +33,11 @@ export default function HomeTab({ sukiList, setSukiList, todayStats, setTodaySta
 
   const [isSelectSukiOpen, setIsSelectSukiOpen] = useState(false);
   const [sukiSearch, setSukiSearch] = useState('');
+  
+  // NEW SUKI MODAL STATES
+  const [isNewSukiToggle, setIsNewSukiToggle] = useState(false);
+  const [newSukiName, setNewSukiName] = useState('');
+  const [newSukiPhone, setNewSukiPhone] = useState('');
   const [successData, setSuccessData] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -54,7 +59,8 @@ export default function HomeTab({ sukiList, setSukiList, todayStats, setTodaySta
     const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const dateStr = now.toLocaleDateString();
+    const dateStrForMsg = now.toLocaleDateString();
+    const dateStrForHistory = now.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     const smsText = `Hi ${suki.name}! Narekord na sa sistema ang imong dugang utang nga ₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })} karong ${timeStr}. Salamat sa pagsalig!`;
 
@@ -75,7 +81,7 @@ export default function HomeTab({ sukiList, setSukiList, todayStats, setTodaySta
           balance: s.balance + total,
           lastActive: 'Just now',
           history: [
-            { desc: cartDesc, date: dateStr, amt: total },
+            { desc: cartDesc, date: dateStrForHistory, amt: total },
             ...s.history
           ]
         };
@@ -84,7 +90,7 @@ export default function HomeTab({ sukiList, setSukiList, todayStats, setTodaySta
     }));
 
     setSuccessData({
-      msg: `Charged to ${suki.name}'s ledger ₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })} on ${dateStr} ${timeStr}`,
+      msg: `Charged to ${suki.name}'s ledger ₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })} on ${dateStrForMsg} ${timeStr}`,
       sms: smsText,
       phone: suki.phone
     });
@@ -96,6 +102,60 @@ export default function HomeTab({ sukiList, setSukiList, todayStats, setTodaySta
     setTimeout(() => {
       setSuccessData(null);
     }, 8000); // 8 seconds so they have time to copy
+  };
+
+  const handleChargeToNewSuki = (e) => {
+    e.preventDefault();
+    if (!newSukiName.trim()) return;
+
+    const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dateStrForMsg = now.toLocaleDateString();
+    const dateStrForHistory = now.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    const smsText = `Hi ${newSukiName}! Narekord na sa sistema ang imong utang nga ₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })} karong ${timeStr}. Salamat sa pagsalig!`;
+    const cartDesc = cart.map(item => `${item.qty}x ${item.name}`).join(', ');
+    const costTotal = cart.reduce((sum, item) => sum + ((item.cost || item.price * 0.8) * item.qty), 0);
+
+    setTodayStats(prev => ({
+      ...prev,
+      credit: prev.credit + total,
+      profit: prev.profit + (total - costTotal)
+    }));
+
+    const newSukiObj = {
+      id: Date.now(),
+      name: newSukiName,
+      phone: newSukiPhone,
+      balance: total,
+      lastActive: 'Just now',
+      initial: newSukiName.charAt(0).toUpperCase(),
+      bg: 'bg-emerald-100 text-emerald-700',
+      history: [
+        { desc: cartDesc, date: dateStrForHistory, amt: total }
+      ]
+    };
+
+    setSukiList(prev => [newSukiObj, ...prev]);
+
+    setSuccessData({
+      msg: `Charged to ${newSukiName}'s ledger ₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })} on ${dateStrForMsg} ${timeStr}`,
+      sms: smsText,
+      phone: newSukiPhone
+    });
+    setCopied(false);
+    setIsSelectSukiOpen(false);
+    clearCart();
+    
+    // Reset form
+    setNewSukiName('');
+    setNewSukiPhone('');
+    setIsNewSukiToggle(false);
+
+    setTimeout(() => {
+      setSuccessData(null);
+    }, 8000);
   };
 
   const handleConfirmCashPayment = () => {
@@ -616,48 +676,107 @@ export default function HomeTab({ sukiList, setSukiList, todayStats, setTodaySta
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-t-[2rem] w-full max-w-sm overflow-hidden shadow-2xl animate-in slide-in-from-bottom-10 h-[80vh] flex flex-col">
             <div className="bg-emerald-600 px-6 py-5 flex justify-between items-center text-white shrink-0">
-              <h3 className="font-bold text-lg">Select Suki</h3>
+              <h3 className="font-bold text-lg">Charge to Suki</h3>
               <button onClick={() => setIsSelectSukiOpen(false)} className="bg-emerald-500/30 p-1.5 rounded-full hover:bg-emerald-500/50">
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-4 bg-slate-50 shrink-0 border-b border-slate-200">
-              <div className="relative">
-                <Search className="absolute left-4 top-3.5 text-slate-400" size={18} />
-                <input
-                  type="text"
-                  autoFocus
-                  placeholder="Pangitaa si Suki..."
-                  value={sukiSearch}
-                  onChange={e => setSukiSearch(e.target.value)}
-                  className="w-full bg-white border border-slate-200 pl-11 pr-4 py-3 rounded-2xl font-medium text-slate-800 focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition"
-                />
+            <div className="p-4 bg-slate-50 shrink-0 border-b border-slate-200 flex flex-col gap-3">
+              {/* TOGGLE: OLD VS NEW SUKI */}
+              <div className="flex bg-slate-200/50 p-1 rounded-2xl text-xs font-bold">
+                <button 
+                  onClick={() => setIsNewSukiToggle(false)}
+                  className={`flex-1 py-2.5 rounded-xl transition ${!isNewSukiToggle ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Existing Suki
+                </button>
+                <button 
+                  onClick={() => setIsNewSukiToggle(true)}
+                  className={`flex-1 py-2.5 rounded-xl transition ${isNewSukiToggle ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  + New Profile
+                </button>
               </div>
+
+              {!isNewSukiToggle && (
+                <div className="relative">
+                  <Search className="absolute left-4 top-3.5 text-slate-400" size={18} />
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Pangitaa si Suki..."
+                    value={sukiSearch}
+                    onChange={e => setSukiSearch(e.target.value)}
+                    className="w-full bg-white border border-slate-200 pl-11 pr-4 py-3 rounded-2xl font-medium text-slate-800 focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
-              {filteredSukiList.length === 0 && (
-                <p className="text-center text-slate-400 text-sm mt-4">Suki not found.</p>
-              )}
-              {filteredSukiList.map(suki => (
-                <button
-                  key={suki.id}
-                  onClick={() => handleChargeToSuki(suki)}
-                  className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:border-emerald-300 hover:bg-emerald-50/50 transition active:scale-95 text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-lg">
-                      {suki.name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-800">{suki.name}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">Current Balance: ₱{suki.balance.toLocaleString()}</p>
-                    </div>
+              {isNewSukiToggle ? (
+                <form onSubmit={handleChargeToNewSuki} className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Full Name</label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={newSukiName} 
+                      onChange={e => setNewSukiName(e.target.value)} 
+                      placeholder="e.g., Aling Nena" 
+                      className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl font-medium text-slate-800 focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition"
+                    />
                   </div>
-                  <ChevronRight size={18} className="text-slate-300" />
-                </button>
-              ))}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Phone Number (For SMS)</label>
+                    <input 
+                      type="text" 
+                      value={newSukiPhone} 
+                      onChange={e => setNewSukiPhone(e.target.value)} 
+                      placeholder="e.g., 09123456789" 
+                      className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl font-medium text-slate-800 focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition"
+                    />
+                  </div>
+                  
+                  <div className="pt-4 border-t border-slate-100 mt-2">
+                    <p className="text-center text-sm font-bold text-slate-500 mb-2">Total Halaga sa Utang</p>
+                    <p className="text-center text-3xl font-black text-red-500 mb-4">₱{cartTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    
+                    <button 
+                      type="submit" 
+                      disabled={!newSukiName.trim()} 
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-500/30 transition text-sm"
+                    >
+                      Save Profile & Confirm Charge
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  {filteredSukiList.length === 0 && (
+                    <p className="text-center text-slate-400 text-sm mt-4">Suki not found.</p>
+                  )}
+                  {filteredSukiList.map(suki => (
+                    <button
+                      key={suki.id}
+                      onClick={() => handleChargeToSuki(suki)}
+                      className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:border-emerald-300 hover:bg-emerald-50/50 transition active:scale-95 text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${suki.bg || 'bg-emerald-100 text-emerald-600'}`}>
+                          {suki.initial || suki.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800">{suki.name}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">Current Balance: ₱{suki.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                        </div>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-300" />
+                    </button>
+                  ))}
+                </>
+              )}
             </div>
           </div>
         </div>
