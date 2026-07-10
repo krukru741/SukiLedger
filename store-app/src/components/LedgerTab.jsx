@@ -1,10 +1,15 @@
+// src/components/LedgerTab.jsx
 import React, { useState } from 'react';
-import { Bell, Filter, X, Send, CreditCard } from 'lucide-react';
+import { Bell, Filter } from 'lucide-react';
+import SukiListCard from '../features/ledger/components/SukiListCard';
+import DetailedLedgerModal from '../features/ledger/components/DetailedLedgerModal';
+import RecordPaymentModal from '../features/ledger/components/RecordPaymentModal';
+import RecordNewLedgerModal from '../features/ledger/components/RecordNewLedgerModal';
+import { recordSukiPayment, recordManualLedger } from '../services/sukiService';
 
 export default function LedgerTab({ sukiList, setSukiList }) {
   const [selectedSuki, setSelectedSuki] = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortType, setSortType] = useState('recent');
   const [isRecordLedgerModalOpen, setIsRecordLedgerModalOpen] = useState(false);
@@ -17,13 +22,9 @@ export default function LedgerTab({ sukiList, setSukiList }) {
   };
 
   const sortedSukiList = [...sukiList].sort((a, b) => {
-    if (sortType === 'name') {
-      return a.name.localeCompare(b.name);
-    } else if (sortType === 'debt') {
-      return b.balance - a.balance;
-    } else {
-      return getLatestDate(b) - getLatestDate(a);
-    }
+    if (sortType === 'name') return a.name.localeCompare(b.name);
+    if (sortType === 'debt') return b.balance - a.balance;
+    return getLatestDate(b) - getLatestDate(a);
   });
 
   const sendSMSReminder = (suki) => {
@@ -38,89 +39,40 @@ export default function LedgerTab({ sukiList, setSukiList }) {
 
   const getOverdueDays = (suki) => {
     if (suki.balance <= 0 || !suki.history || suki.history.length === 0) return 0;
-    // The oldest transaction is at the end of the array
     const oldestTx = suki.history[suki.history.length - 1];
-    const oldestDate = new Date(oldestTx.date);
-    const today = new Date();
-    const diffTime = today - oldestDate;
+    const diffTime = new Date() - new Date(oldestTx.date);
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
 
-  const handleRecordPayment = (e) => {
-    e.preventDefault();
-    const amt = parseFloat(paymentAmount);
-    if (isNaN(amt) || amt <= 0) return;
-
-    setSukiList(sukiList.map(s => {
-      if (s.id === selectedSuki.id) {
-        const newBalance = s.balance - amt;
-        const newHistory = [
-          {
-            desc: `Payment Received — ₱${amt.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-            date: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-            amt: -amt,
-            isPayment: true
-          },
-          ...s.history
-        ];
-        const updatedSuki = { ...s, balance: newBalance, history: newHistory };
-        setSelectedSuki(updatedSuki);
-        return updatedSuki;
-      }
-      return s;
+  const handleRecordPayment = (amount) => {
+    recordSukiPayment({ sukiId: selectedSuki.id, amount, setSukiList });
+    
+    // Update local selectedSuki for the modal to reflect immediately
+    setSelectedSuki(prev => ({
+      ...prev,
+      balance: Math.max(0, prev.balance - amount),
+      history: [
+        {
+          desc: `Payment Received — ₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+          date: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          amt: -amount,
+          isPayment: true
+        },
+        ...prev.history
+      ]
     }));
-
-    setPaymentAmount('');
+    
     setIsPaymentModalOpen(false);
   };
 
   const handleSaveNewLedger = (data) => {
-    const { isNewSuki, selectedSukiId, newSukiName, newSukiPhone, itemsUtang, totalAmount } = data;
-    
-    let targetSuki = null;
-    let updatedSukiList = [...sukiList];
-    
-    const newTransaction = {
-      desc: itemsUtang,
-      date: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      amt: totalAmount,
-      isPayment: false
-    };
-
-    if (isNewSuki) {
-      targetSuki = {
-        id: Date.now(),
-        name: newSukiName,
-        phone: newSukiPhone,
-        balance: totalAmount,
-        lastActive: 'Just now',
-        initial: newSukiName.charAt(0).toUpperCase(),
-        bg: 'bg-emerald-100 text-emerald-700',
-        history: [newTransaction]
-      };
-      updatedSukiList.unshift(targetSuki);
-    } else {
-      updatedSukiList = updatedSukiList.map(s => {
-        if (s.id === parseInt(selectedSukiId)) {
-          targetSuki = {
-            ...s,
-            balance: s.balance + totalAmount,
-            lastActive: 'Just now',
-            history: [newTransaction, ...s.history]
-          };
-          return targetSuki;
-        }
-        return s;
-      });
-    }
-
-    setSukiList(updatedSukiList);
+    const updatedSuki = recordManualLedger({ ...data, sukiList, setSukiList });
     setIsRecordLedgerModalOpen(false);
 
-    if (targetSuki) {
+    if (updatedSuki) {
       setTimeout(() => {
-        sendSMSReminder(targetSuki);
+        sendSMSReminder(updatedSuki);
       }, 300);
     }
   };
@@ -186,251 +138,39 @@ export default function LedgerTab({ sukiList, setSukiList }) {
         {/* SUKI ACCOUNTS LIST */}
         <div className="flex flex-col gap-3 mb-6">
           {sortedSukiList.map((suki) => (
-            <div
-              key={suki.id}
-              onClick={() => suki.history.length > 0 && setSelectedSuki(suki)}
-              className={`p-4 bg-white border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between transition active:bg-slate-50 ${suki.history.length > 0 ? 'cursor-pointer' : ''}`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base ${suki.bg}`}>{suki.initial}</div>
-                <div>
-                  <h5 className="font-bold text-slate-800 text-sm">{suki.name}</h5>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <p className="text-slate-400 text-xs">Last active: {suki.lastActive}</p>
-                    {getOverdueDays(suki) >= 7 && (
-                      <span className="bg-orange-100 text-orange-600 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
-                        Overdue {getOverdueDays(suki)}d
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <p className="font-bold text-red-500 text-sm">₱ {suki.balance.toLocaleString()}</p>
-            </div>
+            <SukiListCard 
+              key={suki.id} 
+              suki={suki} 
+              onClick={setSelectedSuki} 
+              overdueDays={getOverdueDays(suki)} 
+            />
           ))}
         </div>
       </div>
 
-      {/* DETAILED LEDGER DIALOG MODAL (SCREEN 4) */}
-      {selectedSuki && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end justify-center animate-fade-in md:p-4 md:items-center">
-          <div className="bg-white w-full max-w-md rounded-t-[2.5rem] md:rounded-3xl p-6 shadow-2xl flex flex-col gap-6 animate-slide-up max-h-[85vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-3.5">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-lg ${selectedSuki.bg}`}>{selectedSuki.initial}</div>
-                <div>
-                  <h3 className="font-black text-slate-800 text-lg">{selectedSuki.name}</h3>
-                  <p className="text-xs font-semibold text-slate-400 mt-0.5">Total Utang: <span className="text-red-500 font-bold">₱ {selectedSuki.balance.toLocaleString()}.00</span></p>
-                </div>
-              </div>
-              <button onClick={() => setSelectedSuki(null)} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:bg-slate-100"><X size={18} /></button>
-            </div>
+      {/* MODALS */}
+      <DetailedLedgerModal 
+        selectedSuki={selectedSuki} 
+        onClose={() => setSelectedSuki(null)} 
+        onSendReminder={sendSMSReminder} 
+        onOpenPaymentModal={() => setIsPaymentModalOpen(true)} 
+      />
 
-            {/* Debt Log Section */}
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Debt History</p>
-              <div className="flex flex-col gap-3">
-                {selectedSuki.history.map((log, index) => (
-                  <div key={index} className={`bg-slate-50/70 border ${log.isPayment ? 'border-emerald-100 bg-emerald-50/30' : 'border-slate-100'} p-4 rounded-2xl flex justify-between items-center`}>
-                    <div>
-                      <p className={`font-bold text-sm ${log.isPayment ? 'text-emerald-600' : 'text-slate-700'}`}>{log.desc}</p>
-                      <p className="text-slate-400 text-[11px] mt-1">{log.date}</p>
-                    </div>
-                    <p className={`font-bold text-sm ${log.isPayment ? 'text-emerald-600' : 'text-slate-800'}`}>
-                      {log.isPayment ? '- ₱ ' : '₱ '}{Math.abs(log.amt).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-2.5 mt-2">
-              <button
-                onClick={() => sendSMSReminder(selectedSuki)}
-                className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm shadow-sm transition active:scale-98"
-              >
-                <Send size={16} /> Send Reminder
-              </button>
-              <button
-                onClick={() => setIsPaymentModalOpen(true)}
-                className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-600 font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm transition active:scale-98"
-              >
-                <CreditCard size={16} /> Record Payment
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* RECORD PAYMENT MODAL */}
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2rem] w-full max-w-xs overflow-hidden shadow-2xl">
-            <div className="bg-emerald-600 px-6 py-4 flex justify-between items-center text-white">
-              <h3 className="font-bold">Record Payment</h3>
-              <button onClick={() => setIsPaymentModalOpen(false)} className="bg-emerald-500/30 p-1 rounded-full hover:bg-emerald-500/50">
-                <X size={16} />
-              </button>
-            </div>
-            <form onSubmit={handleRecordPayment} className="p-5 flex flex-col gap-4">
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Current Balance:</p>
-                <p className="text-lg font-bold text-red-500 mb-4">₱ {selectedSuki?.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Amount Paid (₱)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  autoFocus
-                  required
-                  placeholder="0.00"
-                  value={paymentAmount}
-                  onChange={e => setPaymentAmount(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl font-bold text-lg text-slate-800 focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={!paymentAmount || parseFloat(paymentAmount) <= 0}
-                className={`w-full font-bold py-3 rounded-xl transition ${paymentAmount && parseFloat(paymentAmount) > 0
-                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
-                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  }`}
-              >
-                Save Payment
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* RECORD NEW LEDGER MODAL */}
-      {isRecordLedgerModalOpen && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <RecordNewLedgerModal 
-            sukiList={sukiList} 
-            onClose={() => setIsRecordLedgerModalOpen(false)} 
-            onSave={handleSaveNewLedger} 
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function RecordNewLedgerModal({ sukiList = [], onClose, onSave }) {
-  const [isNewSuki, setIsNewSuki] = useState(false);
-  const [selectedSukiId, setSelectedSukiId] = useState('');
-  const [newSukiName, setNewSukiName] = useState('');
-  const [newSukiPhone, setNewSukiPhone] = useState('');
-  const [itemsUtang, setItemsUtang] = useState('');
-  const [totalAmount, setTotalAmount] = useState('');
-
-  return (
-    <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-xl animate-fade-in">
-      <h3 className="text-xl font-black text-slate-800 mb-4">Record New Ledger</h3>
-      
-      {/* TOGGLE: OLD VS NEW SUKI */}
-      <div className="flex bg-slate-100 p-1 rounded-2xl mb-4 text-xs font-bold">
-        <button 
-          type="button"
-          onClick={() => setIsNewSuki(false)}
-          className={`flex-1 py-2 rounded-xl transition ${!isNewSuki ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}
-        >
-          Existing Suki
-        </button>
-        <button 
-          type="button"
-          onClick={() => setIsNewSuki(true)}
-          className={`flex-1 py-2 rounded-xl transition ${isNewSuki ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}
-        >
-          + New Suki Profile
-        </button>
-      </div>
-
-      {/* CUSTOMER SELECTOR OR INPUT */}
-      {!isNewSuki ? (
-        <div className="mb-4">
-          <label className="text-slate-400 font-bold text-[10px] tracking-wider uppercase block mb-1.5">Pili og Suki</label>
-          <select 
-            value={selectedSukiId} 
-            onChange={(e) => setSelectedSukiId(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl font-semibold text-slate-700 text-sm focus:outline-none"
-          >
-            <option value="">-- Select Customer --</option>
-            {sukiList.map(suki => (
-              <option key={suki.id} value={suki.id}>{suki.name}</option>
-            ))}
-          </select>
-        </div>
-      ) : (
-        <div className="space-y-3 mb-4">
-          <div>
-            <label className="text-slate-400 font-bold text-[10px] tracking-wider uppercase block mb-1">Full Name</label>
-            <input 
-              type="text" 
-              value={newSukiName} 
-              onChange={(e) => setNewSukiName(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:outline-none" 
-              placeholder="e.g., Aling Nena" 
-            />
-          </div>
-          <div>
-            <label className="text-slate-400 font-bold text-[10px] tracking-wider uppercase block mb-1">Phone Number (For SMS)</label>
-            <input 
-              type="text" 
-              value={newSukiPhone} 
-              onChange={(e) => setNewSukiPhone(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:outline-none" 
-              placeholder="e.g., 09123456789" 
-            />
-          </div>
-        </div>
-      )}
-
-      {/* UTANG DETAILS */}
-      <div className="mb-4">
-        <label className="text-slate-400 font-bold text-[10px] tracking-wider uppercase block mb-1.5">Mga Gipalit (Items)</label>
-        <textarea 
-          value={itemsUtang}
-          onChange={(e) => setItemsUtang(e.target.value)}
-          rows="2"
-          className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-semibold text-slate-800 focus:outline-none resize-none"
-          placeholder="e.g., 5kg Rice, 1L Oil"
+        <RecordPaymentModal 
+          selectedSuki={selectedSuki} 
+          onClose={() => setIsPaymentModalOpen(false)} 
+          onSave={handleRecordPayment} 
         />
-      </div>
+      )}
 
-      {/* TOTAL AMOUNT DUE */}
-      <div className="mb-6">
-        <label className="text-slate-400 font-bold text-[10px] tracking-wider uppercase block mb-1.5">Total Halaga (₱)</label>
-        <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black">₱</span>
-          <input 
-            type="number" 
-            value={totalAmount}
-            onChange={(e) => setTotalAmount(e.target.value)}
-            className="w-full pl-8 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-extrabold text-slate-800 text-lg focus:outline-none"
-            placeholder="0.00"
-          />
-        </div>
-      </div>
-
-      {/* ACTIONS */}
-      <div className="flex gap-2">
-        <button type="button" onClick={onClose} className="flex-1 py-3.5 bg-slate-100 font-bold text-slate-600 rounded-2xl text-xs">
-          Cancel
-        </button>
-        <button 
-          type="button"
-          disabled={(!selectedSukiId && !newSukiName) || !itemsUtang || !totalAmount}
-          onClick={() => onSave({ isNewSuki, selectedSukiId, newSukiName, newSukiPhone, itemsUtang, totalAmount: Number(totalAmount) })}
-          className="flex-1 py-3.5 bg-emerald-500 font-bold text-white rounded-2xl text-xs hover:bg-emerald-600 disabled:opacity-40 transition shadow-md"
-        >
-          Save Ledger
-        </button>
-      </div>
+      {isRecordLedgerModalOpen && (
+        <RecordNewLedgerModal 
+          sukiList={sukiList} 
+          onClose={() => setIsRecordLedgerModalOpen(false)} 
+          onSave={handleSaveNewLedger} 
+        />
+      )}
     </div>
   );
 }
