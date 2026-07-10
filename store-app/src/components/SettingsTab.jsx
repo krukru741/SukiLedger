@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Settings, Store, Camera, Wallet, MessageSquare, Save, RotateCcw, CheckCircle, Phone, User } from 'lucide-react';
 
 export default function SettingsTab({ settings, setSettings }) {
@@ -54,7 +54,7 @@ export default function SettingsTab({ settings, setSettings }) {
               <button
                 key={s.id}
                 onClick={() => setActiveSection(s.id)}
-                className={lex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 }
+                className={"flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 " + (activeSection === s.id ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700')}
               >
                 <Icon size={13} />{s.label}
               </button>
@@ -131,7 +131,7 @@ export default function SettingsTab({ settings, setSettings }) {
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quick Presets</p>
             <div className="grid grid-cols-3 gap-2">
               {[200, 500, 1000, 1500, 2000, 5000].map(amt => (
-                <button key={amt} onClick={() => setLocalSettings(p => ({ ...p, startingCash: amt }))} className={py-2.5 rounded-xl border text-sm font-bold transition }>
+                <button key={amt} onClick={() => setLocalSettings(p => ({ ...p, startingCash: amt }))} className={"py-2.5 rounded-xl border text-sm font-bold transition " + (localSettings.startingCash === amt ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-emerald-300')}>
                   &#x20b1;{amt.toLocaleString()}
                 </button>
               ))}
@@ -170,7 +170,7 @@ export default function SettingsTab({ settings, setSettings }) {
           <button onClick={() => setLocalSettings({ ...settings })} className="flex items-center gap-2 px-4 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-2xl text-sm hover:bg-slate-200 transition">
             <RotateCcw size={15} /> Reset
           </button>
-          <button onClick={handleSave} className={lex-1 flex items-center justify-center gap-2 py-3.5 font-bold rounded-2xl text-sm transition shadow-md }>
+          <button onClick={handleSave} className={"flex-1 flex items-center justify-center gap-2 py-3.5 font-bold rounded-2xl text-sm transition shadow-md " + (saved ? 'bg-emerald-500 text-white shadow-emerald-500/30' : 'bg-slate-900 text-white hover:bg-slate-800')}>
             {saved ? <CheckCircle size={16} /> : <Save size={16} />}
             {saved ? 'Saved!' : 'Save Changes'}
           </button>

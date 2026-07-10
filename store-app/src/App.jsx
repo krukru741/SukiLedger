@@ -3,7 +3,8 @@ import HomeTab from './components/HomeTab';
 import StockTab from './components/StockTab';
 import LedgerTab from './components/LedgerTab';
 import AnalyticsTab from './components/AnalyticsTab';
-import { LayoutGrid, Package, BookOpen, Bell, Utensils, Coffee, ShoppingBag, Droplet, BarChart2 } from 'lucide-react';
+import SettingsTab from './components/SettingsTab';
+import { LayoutGrid, Package, BookOpen, Bell, Utensils, Coffee, ShoppingBag, Droplet, BarChart2, Settings } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -59,6 +60,16 @@ export default function App() {
     { id: 8, name: 'Ice Tubig', price: 3.00, cost: 1.00, qty: 100, min: 50, icon: Droplet, color: 'bg-cyan-50 text-cyan-500' },
   ]);
 
+  // Global Settings State
+  const [settings, setSettings] = useState({
+    storeName: 'SukiLedger Tindahan',
+    ownerName: '',
+    ownerPhone: '',
+    logo: '',
+    startingCash: 500,
+    smsTemplate: 'Maayong adlaw, {name}! Reminder lang gikan sa {storeName} bahin sa imong kasamtangang utang ledger nga nagkantidad og {balance}. Pwede ra nimo ma-settle sa tindahan kung hayahay na ka. Salamat kaayo!'
+  });
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row pb-20 md:pb-0">
       {/* DESKTOP SIDEBAR */}
@@ -89,6 +100,12 @@ export default function App() {
           >
             <BarChart2 size={20} /> Analytics
           </button>
+          <button 
+            onClick={() => setActiveTab('settings')} 
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${activeTab === 'settings' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
+            <Settings size={20} /> Settings
+          </button>
         </nav>
       </aside>
 
@@ -100,6 +117,7 @@ export default function App() {
           {activeTab === 'stock' && <StockTab inventory={inventory} setInventory={setInventory} />}
           {activeTab === 'ledger' && <LedgerTab sukiList={sukiList} setSukiList={setSukiList} />}
           {activeTab === 'analytics' && <AnalyticsTab shiftHistory={shiftHistory} inventory={inventory} sukiList={sukiList} todayStats={todayStats} />}
+          {activeTab === 'settings' && <SettingsTab settings={settings} setSettings={setSettings} />}
         </div>
       </main>
 
@@ -120,6 +138,10 @@ export default function App() {
         <button onClick={() => setActiveTab('analytics')} className={`flex flex-col items-center gap-0.5 ${activeTab === 'analytics' ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
           <BarChart2 size={22} />
           <span className="text-xs">Analytics</span>
+        </button>
+        <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center gap-0.5 ${activeTab === 'settings' ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
+          <Settings size={22} />
+          <span className="text-xs">Settings</span>
         </button>
       </div>
     </div>
