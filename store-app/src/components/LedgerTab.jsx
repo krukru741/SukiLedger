@@ -7,7 +7,7 @@ import RecordPaymentModal from '../features/ledger/components/RecordPaymentModal
 import RecordNewLedgerModal from '../features/ledger/components/RecordNewLedgerModal';
 import { recordSukiPayment, recordManualLedger } from '../services/sukiService';
 
-export default function LedgerTab({ sukiList, setSukiList }) {
+export default function LedgerTab({ settings, sukiList, setSukiList }) {
   const [selectedSuki, setSelectedSuki] = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -28,7 +28,11 @@ export default function LedgerTab({ sukiList, setSukiList }) {
   });
 
   const sendSMSReminder = (suki) => {
-    const reminderMessage = `Maayong adlaw, ${suki.name}! Reminder lang gikan sa tindahan bahin sa imong kasamtangang utang ledger nga nagkantidad og ₱${suki.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}. Pwede ra nimo ma-settle sa tindahan kung hayahay na ka. Salamat kaayo!`;
+    const template = settings?.smsTemplate || 'Maayong adlaw, {name}! Reminder lang gikan sa {storeName} bahin sa imong kasamtangang utang ledger nga nagkantidad og {balance}. Pwede ra nimo ma-settle sa tindahan kung hayahay na ka. Salamat kaayo!';
+    const reminderMessage = template
+      .replaceAll('{name}', suki.name)
+      .replaceAll('{balance}', `₱${suki.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`)
+      .replaceAll('{storeName}', settings?.storeName || 'ang tindahan');
     if (suki.phone) {
       window.location.href = `sms:${suki.phone}?body=${encodeURIComponent(reminderMessage)}`;
     } else {

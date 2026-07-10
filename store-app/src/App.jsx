@@ -18,6 +18,10 @@ export default function App() {
 
   const { loading } = useSupabaseData(setInventory, setSukiList, setShiftHistory);
 
+  React.useEffect(() => {
+    setTodayStats(prev => ({ ...prev, startingCash: settings.startingCash }));
+  }, [settings.startingCash]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center flex-col gap-4">
@@ -31,7 +35,14 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row pb-20 md:pb-0">
       {/* DESKTOP SIDEBAR */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 p-5 sticky top-0 h-screen">
-        <h1 className="text-xl font-bold text-emerald-600 mb-8">SukiLedger</h1>
+        <div className="flex items-center gap-3 mb-8">
+          {settings.logo ? (
+            <img src={settings.logo} alt="logo" className="w-8 h-8 rounded-lg object-cover" />
+          ) : (
+            <div className="w-8 h-8 bg-emerald-100 text-emerald-600 flex items-center justify-center rounded-lg font-bold">S</div>
+          )}
+          <h1 className="text-xl font-bold text-emerald-600 truncate">{settings.storeName || 'SukiLedger'}</h1>
+        </div>
         <nav className="flex flex-col gap-2">
           <button 
             onClick={() => setActiveTab('home')} 
@@ -70,9 +81,9 @@ export default function App() {
       <main className="flex-1 max-w-md mx-auto w-full bg-white md:max-w-4xl md:my-6 md:rounded-2xl md:shadow-sm overflow-hidden flex flex-col">
         {/* Render rendering active screen */}
         <div className="flex-1">
-          {activeTab === 'home' && <HomeTab sukiList={sukiList} setSukiList={setSukiList} todayStats={todayStats} setTodayStats={setTodayStats} shiftHistory={shiftHistory} setShiftHistory={setShiftHistory} inventory={inventory} setInventory={setInventory} />}
+          {activeTab === 'home' && <HomeTab settings={settings} sukiList={sukiList} setSukiList={setSukiList} todayStats={todayStats} setTodayStats={setTodayStats} shiftHistory={shiftHistory} setShiftHistory={setShiftHistory} inventory={inventory} setInventory={setInventory} />}
           {activeTab === 'stock' && <StockTab inventory={inventory} setInventory={setInventory} />}
-          {activeTab === 'ledger' && <LedgerTab sukiList={sukiList} setSukiList={setSukiList} />}
+          {activeTab === 'ledger' && <LedgerTab settings={settings} sukiList={sukiList} setSukiList={setSukiList} />}
           {activeTab === 'analytics' && <AnalyticsTab shiftHistory={shiftHistory} inventory={inventory} sukiList={sukiList} todayStats={todayStats} />}
           {activeTab === 'settings' && <SettingsTab settings={settings} setSettings={setSettings} />}
         </div>

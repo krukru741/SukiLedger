@@ -12,7 +12,7 @@ import SuccessToast from '../features/pos/components/SuccessToast';
 import { chargeToSuki, chargeToNewSuki } from '../services/sukiService';
 import { confirmCashPayment } from '../services/statsService';
 
-export default function HomeTab({ sukiList, setSukiList, todayStats, setTodayStats, shiftHistory, setShiftHistory, inventory, setInventory }) {
+export default function HomeTab({ settings, sukiList, setSukiList, todayStats, setTodayStats, shiftHistory, setShiftHistory, inventory, setInventory }) {
   const { cart, addToCart, clearCart, cartTotal } = useCart();
 
   // Modals & UI State
@@ -48,9 +48,17 @@ export default function HomeTab({ sukiList, setSukiList, todayStats, setTodaySta
   // Handlers using Services
   const handleChargeToSuki = (suki) => {
     const { total, dateStrForMsg, timeStr } = chargeToSuki({ suki, cart, setSukiList, setTodayStats });
+    
+    // Build SMS from template
+    const template = settings?.smsTemplate || 'Maayong adlaw, {name}! Reminder lang gikan sa {storeName} bahin sa imong kasamtangang utang ledger nga nagkantidad og {balance}. Pwede ra nimo ma-settle sa tindahan kung hayahay na ka. Salamat kaayo!';
+    const smsMsg = template
+      .replaceAll('{name}', suki.name)
+      .replaceAll('{balance}', `₱${(suki.balance + total).toLocaleString('en-US', { minimumFractionDigits: 2 })}`)
+      .replaceAll('{storeName}', settings?.storeName || 'ang tindahan');
+
     showToast({
       msg: `Charged to ${suki.name}'s ledger ₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })} on ${dateStrForMsg} ${timeStr}`,
-      sms: `Hi ${suki.name}! Narekord na sa sistema ang imong dugang utang nga ₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })} karong ${timeStr}. Salamat sa pagsalig!`,
+      sms: smsMsg,
       phone: suki.phone
     }, 8000);
     setIsSelectSukiOpen(false);
@@ -59,9 +67,17 @@ export default function HomeTab({ sukiList, setSukiList, todayStats, setTodaySta
 
   const handleChargeToNewSuki = ({ name, phone }) => {
     const { total, dateStrForMsg, timeStr } = chargeToNewSuki({ name, phone, cart, setSukiList, setTodayStats });
+    
+    // Build SMS from template
+    const template = settings?.smsTemplate || 'Maayong adlaw, {name}! Reminder lang gikan sa {storeName} bahin sa imong kasamtangang utang ledger nga nagkantidad og {balance}. Pwede ra nimo ma-settle sa tindahan kung hayahay na ka. Salamat kaayo!';
+    const smsMsg = template
+      .replaceAll('{name}', name)
+      .replaceAll('{balance}', `₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}`)
+      .replaceAll('{storeName}', settings?.storeName || 'ang tindahan');
+
     showToast({
       msg: `Charged to ${name}'s ledger ₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })} on ${dateStrForMsg} ${timeStr}`,
-      sms: `Hi ${name}! Narekord na sa sistema ang imong utang nga ₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })} karong ${timeStr}. Salamat sa pagsalig!`,
+      sms: smsMsg,
       phone: phone
     }, 8000);
     setIsSelectSukiOpen(false);
