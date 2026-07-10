@@ -9,9 +9,9 @@ export default function App() {
   const [sukiList, setSukiList] = useState([
     { id: 1, name: 'Aling Nena', balance: 1200, phone: '09123456789', lastActive: '2 days ago', initial: 'A', bg: 'bg-emerald-100 text-emerald-700',
       history: [
-        { desc: '5kg Rice, 1L Oil', date: '10/24/2023', amt: 450 },
-        { desc: 'Canned Goods, Bread', date: '10/22/2023', amt: 350 },
-        { desc: 'Detergent, Load', date: '10/18/2023', amt: 400 }
+        { desc: '5kg Rice, 1L Oil', date: 'Oct 24, 2023, 09:15 AM', amt: 450 },
+        { desc: 'Canned Goods, Bread', date: 'Oct 22, 2023, 02:30 PM', amt: 350 },
+        { desc: 'Detergent, Load', date: 'Oct 18, 2023, 06:45 AM', amt: 400 }
       ]
     },
     { id: 2, name: 'Mang Juan', balance: 850, phone: '09876543210', lastActive: 'Yesterday', initial: 'M', bg: 'bg-amber-100 text-amber-700', history: [] },

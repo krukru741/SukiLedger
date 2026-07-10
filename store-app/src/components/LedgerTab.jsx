@@ -3,6 +3,8 @@ import { Bell, Filter, X, Send, CreditCard } from 'lucide-react';
 
 export default function LedgerTab({ sukiList, setSukiList }) {
   const [selectedSuki, setSelectedSuki] = useState(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('');
 
   const totalDebt = sukiList.reduce((sum, suki) => sum + suki.balance, 0);
 
@@ -15,6 +17,34 @@ export default function LedgerTab({ sukiList, setSukiList }) {
       navigator.clipboard.writeText(msg);
       alert(`Reminder text copied to clipboard for ${suki.name}! Wala pay phone number nga na-save.`);
     }
+  };
+
+  const handleRecordPayment = (e) => {
+    e.preventDefault();
+    const amt = parseFloat(paymentAmount);
+    if (isNaN(amt) || amt <= 0) return;
+
+    setSukiList(sukiList.map(s => {
+      if (s.id === selectedSuki.id) {
+        const newBalance = s.balance - amt;
+        const newHistory = [
+          { 
+            desc: `Payment Received — ₱${amt.toLocaleString('en-US', {minimumFractionDigits: 2})}`, 
+            date: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }), 
+            amt: -amt,
+            isPayment: true
+          },
+          ...s.history
+        ];
+        const updatedSuki = { ...s, balance: newBalance, history: newHistory };
+        setSelectedSuki(updatedSuki);
+        return updatedSuki;
+      }
+      return s;
+    }));
+
+    setPaymentAmount('');
+    setIsPaymentModalOpen(false);
   };
 
   return (
@@ -84,12 +114,14 @@ export default function LedgerTab({ sukiList, setSukiList }) {
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Debt History</p>
               <div className="flex flex-col gap-3">
                 {selectedSuki.history.map((log, index) => (
-                  <div key={index} className="bg-slate-50/70 border border-slate-100 p-4 rounded-2xl flex justify-between items-center">
+                  <div key={index} className={`bg-slate-50/70 border ${log.isPayment ? 'border-emerald-100 bg-emerald-50/30' : 'border-slate-100'} p-4 rounded-2xl flex justify-between items-center`}>
                     <div>
-                      <p className="font-bold text-slate-700 text-sm">{log.desc}</p>
+                      <p className={`font-bold text-sm ${log.isPayment ? 'text-emerald-600' : 'text-slate-700'}`}>{log.desc}</p>
                       <p className="text-slate-400 text-[11px] mt-1">{log.date}</p>
                     </div>
-                    <p className="font-bold text-slate-800 text-sm">₱ {log.amt.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                    <p className={`font-bold text-sm ${log.isPayment ? 'text-emerald-600' : 'text-slate-800'}`}>
+                      {log.isPayment ? '- ₱ ' : '₱ '}{Math.abs(log.amt).toLocaleString('en-US', {minimumFractionDigits: 2})}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -103,10 +135,56 @@ export default function LedgerTab({ sukiList, setSukiList }) {
               >
                 <Send size={16} /> Send Reminder
               </button>
-              <button className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-600 font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm transition active:scale-98">
+              <button 
+                onClick={() => setIsPaymentModalOpen(true)}
+                className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-600 font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm transition active:scale-98"
+              >
                 <CreditCard size={16} /> Record Payment
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* RECORD PAYMENT MODAL */}
+      {isPaymentModalOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] w-full max-w-xs overflow-hidden shadow-2xl">
+            <div className="bg-emerald-600 px-6 py-4 flex justify-between items-center text-white">
+              <h3 className="font-bold">Record Payment</h3>
+              <button onClick={() => setIsPaymentModalOpen(false)} className="bg-emerald-500/30 p-1 rounded-full hover:bg-emerald-500/50">
+                <X size={16} />
+              </button>
+            </div>
+            <form onSubmit={handleRecordPayment} className="p-5 flex flex-col gap-4">
+              <div>
+                <p className="text-xs text-slate-500 mb-1">Current Balance:</p>
+                <p className="text-lg font-bold text-red-500 mb-4">₱ {selectedSuki?.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Amount Paid (₱)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  autoFocus
+                  required
+                  placeholder="0.00"
+                  value={paymentAmount}
+                  onChange={e => setPaymentAmount(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl font-bold text-lg text-slate-800 focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={!paymentAmount || parseFloat(paymentAmount) <= 0}
+                className={`w-full font-bold py-3 rounded-xl transition ${
+                  paymentAmount && parseFloat(paymentAmount) > 0
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                Save Payment
+              </button>
+            </form>
           </div>
         </div>
       )}
