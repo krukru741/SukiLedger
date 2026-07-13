@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SukiLedger – Offline</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: 'Inter', system-ui, sans-serif;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 24px;
+      }
+      .card {
+        background: white;
+        border-radius: 24px;
+        padding: 40px 32px;
+        max-width: 360px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        border: 1px solid #f1f5f9;
+      }
+      .icon {
+        width: 72px;
+        height: 72px;
+        background: #ecfdf5;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 32px;
+      }
+      h1 {
+        font-size: 22px;
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 10px;
+      }
+      p {
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 28px;
+      }
+      .tip {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 14px 16px;
+        font-size: 12px;
+        color: #475569;
+        margin-bottom: 24px;
+        text-align: left;
+      }
+      .tip strong { color: #1e293b; display: block; margin-bottom: 4px; }
+      button {
+        background: #059669;
+        color: white;
+        border: none;
+        border-radius: 14px;
+        padding: 14px 28px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        width: 100%;
+        transition: background 160ms;
+      }
+      button:active { background: #047857; transform: scale(0.97); }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="icon">🏪</div>
+      <h1>Wala Internet</h1>
+      <p>Dili ma-connect ang SukiLedger sa internet karon. Ang imong data lami ra gihapon sa database, maghulat lang og koneksyon.</p>
+      <div class="tip">
+        <strong>💡 Tip:</strong>
+        Ang SukiLedger nag-require og internet aron ma-save ang data sa Supabase. I-check ang imong WiFi o mobile data ug i-refresh ang page.
+      </div>
+      <button onclick="window.location.reload()">🔄 Try Again</button>
+    </div>
+  </body>
+</html>

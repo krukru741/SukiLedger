@@ -146,7 +146,7 @@ Ang UI animations ay sumusunod sa **Emil Kowalski's design engineering philosoph
 - [x] Print receipt support
 - [ ] Multiple cashier accounts
 - [ ] Barcode scanner integration
-- [ ] Offline mode (PWA)
+- [x] Offline mode (PWA)
 - [ ] iOS build (Capacitor)
 
 ---
