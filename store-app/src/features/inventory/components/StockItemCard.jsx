@@ -6,7 +6,7 @@ export default function StockItemCard({ item, onEdit, onUpdateQty }) {
   const isLow = item.qty <= item.min;
 
   return (
-    <div className={`p-4 rounded-2xl border transition shadow-sm flex items-center justify-between ${isLow ? 'bg-red-50/40 border-red-100' : 'bg-white border-slate-100'}`}>
+    <div className={`stagger-item p-4 rounded-2xl border shadow-sm flex items-center justify-between transition-shadow duration-200 ${isLow ? 'bg-red-50/40 border-red-100' : 'bg-white border-slate-100'}`}>
       <div 
         className="flex gap-3 items-start flex-1 cursor-pointer group"
         onClick={() => onEdit(item)}

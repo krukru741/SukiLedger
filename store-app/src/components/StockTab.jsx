@@ -91,7 +91,7 @@ export default function StockTab({ inventory, setInventory }) {
         </div>
 
         {/* INVENTORY LIST */}
-        <div className="flex flex-col gap-3.5 mb-6 mt-2">
+        <div className="flex flex-col gap-3.5 mb-6 mt-2 stagger-children">
           {filteredStocks.map((item) => (
             <StockItemCard 
               key={item.id} 

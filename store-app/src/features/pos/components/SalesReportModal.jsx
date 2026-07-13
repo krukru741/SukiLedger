@@ -24,8 +24,8 @@ export default function SalesReportModal({ todayStats, setTodayStats, shiftHisto
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-t-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl animate-in slide-in-from-bottom-10 h-[75vh] flex flex-col relative">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/60 backdrop-blur-sm modal-backdrop">
+      <div className="bg-white rounded-t-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl animate-slide-up h-[75vh] flex flex-col relative">
         <div className="bg-emerald-600 px-6 py-6 pb-12 flex justify-between items-start text-white shrink-0 relative overflow-hidden">
           <div className="absolute -right-4 -top-4 w-32 h-32 bg-emerald-500 rounded-full opacity-50 blur-2xl" />
           <div>

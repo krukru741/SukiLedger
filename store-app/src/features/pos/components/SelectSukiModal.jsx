@@ -17,8 +17,8 @@ export default function SelectSukiModal({ sukiList, cartTotal, onSelectExisting,
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-t-[2rem] w-full max-w-sm overflow-hidden shadow-2xl animate-in slide-in-from-bottom-10 h-[80vh] flex flex-col">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/60 backdrop-blur-sm modal-backdrop">
+      <div className="bg-white rounded-t-[2rem] w-full max-w-sm overflow-hidden shadow-2xl animate-slide-up h-[80vh] flex flex-col">
         <div className="bg-emerald-600 px-6 py-5 flex justify-between items-center text-white shrink-0">
           <h3 className="font-bold text-lg">Charge to Suki</h3>
           <button onClick={onClose} className="bg-emerald-500/30 p-1.5 rounded-full hover:bg-emerald-500/50">

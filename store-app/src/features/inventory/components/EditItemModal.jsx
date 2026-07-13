@@ -6,8 +6,8 @@ export default function EditItemModal({ editingItem, setEditingItem, onSaveEdit 
   if (!editingItem) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm modal-backdrop">
+      <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl animate-scale-in">
         <div className="bg-emerald-600 px-6 py-5 flex justify-between items-center text-white">
           <h3 className="font-bold text-lg">Edit Item / Restock</h3>
           <button onClick={() => setEditingItem(null)} className="bg-emerald-500/30 p-1.5 rounded-full hover:bg-emerald-500/50">

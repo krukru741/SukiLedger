@@ -60,31 +60,31 @@ export default function App() {
         <nav className="flex flex-col gap-2">
           <button 
             onClick={() => setActiveTab('home')} 
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${activeTab === 'home' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${activeTab === 'home' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             <LayoutGrid size={20} /> Overview
           </button>
           <button 
             onClick={() => setActiveTab('stock')} 
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${activeTab === 'stock' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${activeTab === 'stock' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             <Package size={20} /> Inventory
           </button>
           <button 
             onClick={() => setActiveTab('ledger')} 
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${activeTab === 'ledger' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${activeTab === 'ledger' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             <BookOpen size={20} /> Suki Ledger
           </button>
           <button 
             onClick={() => setActiveTab('analytics')} 
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${activeTab === 'analytics' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${activeTab === 'analytics' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             <BarChart2 size={20} /> Analytics
           </button>
           <button 
             onClick={() => setActiveTab('settings')} 
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${activeTab === 'settings' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${activeTab === 'settings' ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             <Settings size={20} /> Settings
           </button>
@@ -94,7 +94,7 @@ export default function App() {
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 max-w-md mx-auto w-full bg-white md:max-w-4xl md:my-6 md:rounded-2xl md:shadow-sm overflow-hidden flex flex-col">
         {/* Render rendering active screen */}
-        <div className="flex-1">
+        <div key={activeTab} className="flex-1 animate-tab-in">
           {activeTab === 'home' && <HomeTab settings={settings} sukiList={sukiList} setSukiList={setSukiList} todayStats={todayStats} setTodayStats={setTodayStats} shiftHistory={shiftHistory} setShiftHistory={setShiftHistory} inventory={inventory} setInventory={setInventory} />}
           {activeTab === 'stock' && <StockTab inventory={inventory} setInventory={setInventory} />}
           {activeTab === 'ledger' && <LedgerTab settings={settings} sukiList={sukiList} setSukiList={setSukiList} />}

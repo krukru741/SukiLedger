@@ -10,8 +10,8 @@ export default function RecordNewLedgerModal({ sukiList = [], onClose, onSave })
   const [totalAmount, setTotalAmount] = useState('');
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-xl animate-fade-in">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm modal-backdrop">
+      <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-xl animate-scale-in">
         <h3 className="text-xl font-black text-slate-800 mb-4">Record New Ledger</h3>
         
         {/* TOGGLE: OLD VS NEW SUKI */}

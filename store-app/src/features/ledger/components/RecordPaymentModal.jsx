@@ -14,8 +14,8 @@ export default function RecordPaymentModal({ selectedSuki, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-[2rem] w-full max-w-xs overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm modal-backdrop">
+      <div className="bg-white rounded-[2rem] w-full max-w-xs overflow-hidden shadow-2xl animate-scale-in">
         <div className="bg-emerald-600 px-6 py-4 flex justify-between items-center text-white">
           <h3 className="font-bold">Record Payment</h3>
           <button onClick={onClose} className="bg-emerald-500/30 p-1 rounded-full hover:bg-emerald-500/50">

@@ -8,7 +8,7 @@ export default function SuccessToast({ data, onClose }) {
   if (!data) return null;
 
   return (
-    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[70] w-11/12 max-w-sm animate-in fade-in slide-in-from-top-4 duration-300">
+    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[70] w-11/12 max-w-sm animate-toast-in">
       <div className="bg-white border-2 border-emerald-500 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
         <div className="flex items-start gap-3">
           <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={24} />
