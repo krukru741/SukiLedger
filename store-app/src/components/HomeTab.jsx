@@ -9,6 +9,7 @@ import SelectSukiModal from '../features/pos/components/SelectSukiModal';
 import CashPaymentModal from '../features/pos/components/CashPaymentModal';
 import SalesReportModal from '../features/pos/components/SalesReportModal';
 import SuccessToast from '../features/pos/components/SuccessToast';
+import ReceiptModal from '../features/pos/components/ReceiptModal';
 import { chargeToSuki, chargeToNewSuki } from '../services/sukiService';
 import { confirmCashPayment } from '../services/statsService';
 
@@ -21,6 +22,7 @@ export default function HomeTab({ settings, sukiList, setSukiList, todayStats, s
   const [isPayCashOpen, setIsPayCashOpen] = useState(false);
   const [isSalesReportOpen, setIsSalesReportOpen] = useState(false);
   const [successData, setSuccessData] = useState(null);
+  const [receiptData, setReceiptData] = useState(null);
   
   // Specific Form State passed down for convenience, though these could also be inside the modals if entirely isolated.
   const [cashReceived, setCashReceived] = useState('');
@@ -86,6 +88,16 @@ export default function HomeTab({ settings, sukiList, setSukiList, todayStats, s
 
   const handleConfirmCash = () => {
     const { total, change } = confirmCashPayment({ cart, cashReceived, todayStats, setTodayStats, inventory, setInventory });
+    const received = parseFloat(cashReceived) || total;
+    // Show receipt modal
+    setReceiptData({
+      cart: [...cart],
+      total,
+      received,
+      change,
+      storeName: settings?.storeName || 'SukiLedger',
+      timestamp: new Date().toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })
+    });
     showToast({
       msg: `Payment Received: ₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}. Sukli: ₱${change.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       sms: ''
@@ -235,6 +247,7 @@ export default function HomeTab({ settings, sukiList, setSukiList, todayStats, s
       {isSelectSukiOpen && <SelectSukiModal sukiList={sukiList} cartTotal={cartTotal} onSelectExisting={handleChargeToSuki} onAddNewSuki={handleChargeToNewSuki} onClose={() => setIsSelectSukiOpen(false)} />}
       {isPayCashOpen && <CashPaymentModal cartTotal={cartTotal} cashReceived={cashReceived} setCashReceived={setCashReceived} onConfirm={handleConfirmCash} onClose={() => setIsPayCashOpen(false)} />}
       {isSalesReportOpen && <SalesReportModal todayStats={todayStats} setTodayStats={setTodayStats} shiftHistory={shiftHistory} setShiftHistory={setShiftHistory} onClose={() => setIsSalesReportOpen(false)} onSuccessToast={showToast} />}
+      {receiptData && <ReceiptModal receiptData={receiptData} onClose={() => setReceiptData(null)} />}
       
       <SuccessToast data={successData} onClose={() => setSuccessData(null)} />
     </div>

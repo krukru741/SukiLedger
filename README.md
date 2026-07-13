@@ -143,7 +143,7 @@ Ang UI animations ay sumusunod sa **Emil Kowalski's design engineering philosoph
 
 ## 📋 Planned Features
 
-- [ ] Print receipt support
+- [x] Print receipt support
 - [ ] Multiple cashier accounts
 - [ ] Barcode scanner integration
 - [ ] Offline mode (PWA)
